@@ -47,7 +47,9 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
-     * The gérant can do everything; these gates list what the employé cannot.
+     * The gérant can do everything. The employé stands in for him day to day
+     * (service orders, stock, appointments, clients, references) but not for
+     * staff, pay or the garage settings.
      */
     protected function configureGates(): void
     {
@@ -56,5 +58,6 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('manage-cash', fn (User $user): bool => false);
         Gate::define('manage-employees', fn (User $user): bool => false);
         Gate::define('manage-admin', fn (User $user): bool => false);
+        Gate::define('manage-references', fn (User $user): bool => true);
     }
 }

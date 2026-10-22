@@ -60,7 +60,7 @@ export function useNavigation(): {
         ...(can.employees
             ? [{ title: fr.nav.employees, href: employees(), icon: Users }]
             : []),
-        ...(can.admin
+        ...(can.references
             ? [{ title: fr.nav.admin, href: admin(), icon: Settings2 }]
             : []),
     ];

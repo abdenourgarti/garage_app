@@ -13,5 +13,6 @@ export type Auth = {
         cash: boolean;
         employees: boolean;
         admin: boolean;
+        references: boolean;
     };
 };

@@ -77,10 +77,11 @@ Enum `UserRole` : `gerant`, `employe`.
 | Clients, véhicules, rendez-vous | CRUD (sans suppression si utilisé) | Tout |
 | Prestations | Créer, modifier en cours, terminer | Tout + supprimer en cours |
 | Factures, paiements | Générer, encaisser, imprimer | Tout + annuler |
-| Stock, achats | Entrées, corrections, ouvrir bidon | Tout |
+| Stock, achats | Tout | Tout |
 | Caisse, bénéfice, tableau financier | ✗ | ✓ |
 | Employés, salaires, avances | ✗ | ✓ |
-| Référentiels, paramètres, utilisateurs, sauvegardes | ✗ | ✓ |
+| Référentiels (marques, modèles, types de prestations…) | ✓ | ✓ |
+| Paramètres du garage, utilisateurs, sauvegardes | ✗ | ✓ |
 
 Implémentation : `Gate::before` pour le gérant, Policies par modèle, middleware `can:` sur les groupes de routes,
 et le menu React masque les entrées non autorisées (prop partagée `auth.can`).

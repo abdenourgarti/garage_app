@@ -6,7 +6,7 @@
 | --- | --- | --- | --- |
 | 0 — Initialisation | ✅ Terminé | 22/10/2026 | Laravel 13.38 + starter kit React (Inertia 3, Wayfinder, Fortify, Vite+) + Pest, MariaDB 11.5 en InnoDB, locale `fr`, fuseau Africa/Algiers, `lang/fr`, Boost 2.10 (Claude Code : guidelines, 7 skills, MCP). 40 tests verts. |
 | 1 — Socle UI et authentification | ✅ Terminé | 22/10/2026 | Thème oklch clair/sombre (pétrole + ambre), Inter embarquée, sidebar 248 px / icônes / barre basse 5 entrées, connexion par nom d'utilisateur, rôles gérant/employé (`Gate::before`, `auth.can`), compte gérant seedé. 12 composants partagés + `/dev/ui`, CountUp porté sur GSAP. 31 tests Pest + 11 tests JS ; vérifié à 360/768/1280 px, aucune requête externe. |
-| 2 — Référentiels et paramètres | ⬜ À faire | | |
+| 2 — Référentiels et paramètres | ✅ Terminé | 22/10/2026 | 11 tables, 9 référentiels gérés dans Paramètres > Référentiels (recherche, panneau d'ajout/modification, Actif/Inactif, suppression refusée si utilisé), catégories de dépenses système verrouillées, Paramètres > Garage (nom, logo, adresse, téléphone, seuil de rappel) via `SettingsService`. Seeder : 69 wilayas, 41 marques, 503 modèles. 59 tests Pest. |
 | 3 — Clients et véhicules | ⬜ À faire | | |
 | 4 — Stock, huiles, achats | ⬜ À faire | | |
 | 5 — Prestations | ⬜ À faire | | |
@@ -39,9 +39,17 @@
 - **Phase 1** — CountUp de React Bits réécrit avec GSAP (l'original dépend de `motion`) ; pas de liste animée pour l'instant (alertes en phase 12). Lenis installé mais pas encore utilisé (pages de lecture : phases 6 et 14).
 - **Phase 1** — Thème déclaré en `@theme inline` (sinon un bloc `.dark` imbriqué ne change pas les couleurs). PeriodPicker sur champs date natifs (pas de `react-day-picker`).
 - **Phase 1** — Modules du menu servis par une page « Bientôt disponible » (`coming-soon`) le temps de leur livraison ; `/dev/ui` déclarée seulement si `APP_ENV=local`.
+- **Phase 2** — Rôle employé élargi (demande du client) : il remplace le gérant au quotidien, y compris stock, achats et **référentiels** ; restent au gérant les employés, les paies et les paramètres du garage. CDC §1.5 et conception §4 mis à jour. Gate `manage-references` (ouvert aux deux rôles) et `manage-admin` (gérant).
+- **Phase 2** — Un seul `ReferenceController` + enum `ReferenceType` (modèle, règles, recherche, tri) pour les 9 référentiels, au lieu de 9 contrôleurs / requêtes / policies identiques. Autorisation par gates `can:` sur les groupes de routes (pas de policy par modèle).
+- **Phase 2** — Suppression : tentée puis refusée sur l'erreur SQL 23000 (FK `restrictOnDelete`) → « Cet élément est utilisé. Désactivez-le plutôt. » ; s'applique automatiquement aux futures tables.
+- **Phase 2** — Catégories de dépenses système protégées dans le code (`isLocked()`), pas par policy : `Gate::before` laisse tout passer au gérant. `system_key` n'est pas fillable (jamais modifiable depuis un formulaire).
+- **Phase 2** — Wilayas : **69** (loi n° 26-06 d'avril 2026, numérotation 59–69 du décret présidentiel n° 26-206 du 25 mai 2026, JO n° 40). Les numéros 59–69 parus dans la presse en novembre 2025 sont dépassés.
+- **Phase 2** — Seeder : 41 marques, 503 modèles anciens et récents, capacité d'huile vide (dépend de la motorisation). Rappels usuels : vidange moteur 10 000 km, vidange boîte 60 000 km, kit de distribution 60 000 km (modifiables par le gérant) ; prix MO à 0.
+- **Phase 2** — Logo du garage stocké en privé (`storage/app/private/garage`) et servi par `/garage/logo` : pas de `storage:link` (lien symbolique souvent refusé sous Windows). SVG refusé.
 
 ## Points ouverts
 
+- Accès de l’employé à la caisse et au bénéfice : à confirmer avec le client avant la phase 11 (le CDC le réserve au gérant).
 - Tests sur SQLite en mémoire (`phpunit.xml`, défaut du kit) : passer à une base de test MariaDB avant les phases 4–5 (`lockForUpdate`, erreurs FK 23000).
 - Un utilisateur désactivé pendant sa session reste connecté jusqu'à expiration (8 h) : à traiter avec la gestion des utilisateurs (phase 8).
 - Changement forcé du mot de passe gérant par défaut à la première connexion : phase 8.

@@ -1,5 +1,9 @@
 <?php
 
+use App\Enums\ReferenceType;
+use App\Http\Controllers\Admin\GarageSettingsController;
+use App\Http\Controllers\Admin\ReferenceController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard')->name('home');
@@ -17,7 +21,30 @@ Route::middleware('auth')->group(function () {
 
     Route::inertia('cash', 'coming-soon', ['title' => 'Caisse'])->middleware('can:manage-cash')->name('cash.index');
     Route::inertia('employees', 'coming-soon', ['title' => 'Employés'])->middleware('can:manage-employees')->name('employees.index');
-    Route::inertia('admin', 'coming-soon', ['title' => 'Administration'])->middleware('can:manage-admin')->name('admin.index');
+
+    // Logo du garage : lisible par tous (factures, bilans), modifiable par le gérant.
+    Route::get('garage/logo', [GarageSettingsController::class, 'logo'])->name('garage.logo');
+
+    Route::prefix('admin')->name('admin.')->group(function () {
+        Route::get('/', fn (Request $request) => $request->user()->can('manage-admin')
+            ? to_route('admin.garage.edit')
+            : to_route('admin.references.index', ReferenceType::Brands)
+        )->name('index');
+
+        Route::middleware('can:manage-admin')->group(function () {
+            Route::get('garage', [GarageSettingsController::class, 'edit'])->name('garage.edit');
+            Route::put('garage', [GarageSettingsController::class, 'update'])->name('garage.update');
+        });
+
+        Route::middleware('can:manage-references')->prefix('references')->name('references.')->group(function () {
+            Route::redirect('/', '/admin/references/'.ReferenceType::Brands->value);
+            Route::get('{type}', [ReferenceController::class, 'index'])->name('index');
+            Route::post('{type}', [ReferenceController::class, 'store'])->name('store');
+            Route::put('{type}/{id}', [ReferenceController::class, 'update'])->whereNumber('id')->name('update');
+            Route::patch('{type}/{id}/toggle', [ReferenceController::class, 'toggle'])->whereNumber('id')->name('toggle');
+            Route::delete('{type}/{id}', [ReferenceController::class, 'destroy'])->whereNumber('id')->name('destroy');
+        });
+    });
 });
 
 if (app()->isLocal()) {

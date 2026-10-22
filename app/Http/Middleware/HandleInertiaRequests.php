@@ -46,6 +46,7 @@ class HandleInertiaRequests extends Middleware
                     'cash' => $user?->can('manage-cash') ?? false,
                     'employees' => $user?->can('manage-employees') ?? false,
                     'admin' => $user?->can('manage-admin') ?? false,
+                    'references' => $user?->can('manage-references') ?? false,
                 ],
             ],
         ];

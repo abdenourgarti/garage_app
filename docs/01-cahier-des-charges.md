@@ -41,7 +41,7 @@ tableau de bord, recherche, bilan d'entretien, sauvegardes.
 | Rôle | Peut faire |
 | --- | --- |
 | Gérant | Tout : caisse, bénéfice, salaires, paramètres, sauvegardes, annulation de factures |
-| Employé | Clients, véhicules, rendez-vous, prestations, factures, encaissements, entrées de stock ; ne voit ni le bénéfice ni les salaires |
+| Employé | Remplace le gérant au quotidien (absence) : clients, véhicules, rendez-vous, prestations, factures, encaissements, stock et achats, référentiels ; ne gère ni les employés ni les paies, ni les paramètres du garage, et ne voit ni le bénéfice ni les salaires |
 
 Les mécaniciens n'ont pas de compte : ils sont choisis dans une liste sur chaque prestation.
 

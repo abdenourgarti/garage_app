@@ -65,7 +65,7 @@ tests/Feature/{Module}/  tests/Unit/
 - **Pagination** : 25 lignes, côté serveur, avec recherche et filtres dans la query string (partageables, retour arrière préservé).
 - **Suppression** : FK `restrictOnDelete()` sur les référentiels ; l'UI capture `QueryException` 23000 → message « Cet élément est utilisé. Désactivez-le plutôt. ». Pas de `SoftDeletes` sauf mention contraire.
 - **Enums** exposés au front avec `{value, label}`.
-- **Messages flash** : `session()->flash('success'|'error', ...)` → toasts (sonner).
+- **Messages flash** : `Inertia::flash('toast', ['type' => 'success'|'error'|'info'|'warning', 'message' => '…'])` → toasts (sonner), mécanisme natif d'Inertia 3.
 - **Tests** : un test Feature Pest par Action (cas nominal + cas limite) et par écran clé (accès par rôle). Factories pour chaque modèle.
 
 ## 4. Rôles et autorisations

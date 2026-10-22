@@ -1,17 +1,107 @@
-import { Breadcrumbs } from '@/components/breadcrumbs';
-import { SidebarTrigger } from '@/components/ui/sidebar';
-import type { BreadcrumbItem as BreadcrumbItemType } from '@/types';
+import { Link, usePage } from '@inertiajs/react';
+import { Plus, Search } from 'lucide-react';
+import { useEffect } from 'react';
+import { toast } from 'sonner';
+import AppLogoIcon from '@/components/app-logo-icon';
+import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { UserAvatar } from '@/components/user-info';
+import { UserMenuContent } from '@/components/user-menu-content';
+import { fr } from '@/lib/i18n/fr';
+import { dashboard } from '@/routes';
+import { create as createServiceOrder } from '@/routes/service-orders';
 
-export function AppSidebarHeader({
-    breadcrumbs = [],
-}: {
-    breadcrumbs?: BreadcrumbItemType[];
-}) {
+// shortcut: la palette Ctrl+K (GlobalSearch) arrive en phase 7 ; d'ici là le bouton l'annonce.
+function openSearch() {
+    toast.info(`${fr.nav.search} : ${fr.common.comingSoon.toLowerCase()}`);
+}
+
+export function AppSidebarHeader() {
+    const { auth, name } = usePage().props;
+
+    useEffect(() => {
+        const onKeyDown = (event: KeyboardEvent) => {
+            if (
+                (event.ctrlKey || event.metaKey) &&
+                event.key.toLowerCase() === 'k'
+            ) {
+                event.preventDefault();
+                openSearch();
+            }
+        };
+
+        window.addEventListener('keydown', onKeyDown);
+
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, []);
+
     return (
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b border-sidebar-border/50 px-6 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 md:px-4">
-            <div className="flex items-center gap-2">
-                <SidebarTrigger className="-ml-1" />
-                <Breadcrumbs breadcrumbs={breadcrumbs} />
+        <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-2 border-b bg-background/95 px-3 backdrop-blur md:rounded-t-xl md:px-6">
+            <Link
+                href={dashboard()}
+                className="flex items-center gap-2 font-semibold md:hidden"
+                aria-label={name}
+            >
+                <span className="flex size-9 items-center justify-center rounded-md bg-sidebar text-sidebar-primary">
+                    <AppLogoIcon className="size-5" />
+                </span>
+            </Link>
+
+            <Button
+                variant="ghost"
+                size="icon-lg"
+                className="md:hidden"
+                onClick={openSearch}
+                aria-label={fr.nav.search}
+            >
+                <Search className="size-5" />
+            </Button>
+
+            <Button
+                variant="outline"
+                className="hidden h-10 w-72 justify-start gap-2 font-normal text-muted-foreground md:flex"
+                onClick={openSearch}
+            >
+                <Search className="size-4" />
+                <span className="truncate">{fr.common.searchPlaceholder}</span>
+                <kbd className="ms-auto rounded border bg-muted px-1.5 text-xs">
+                    Ctrl K
+                </kbd>
+            </Button>
+
+            <div className="ms-auto flex items-center gap-2">
+                <Button asChild variant="highlight" className="h-11 px-4">
+                    <Link href={createServiceOrder()} prefetch>
+                        <Plus className="size-5" />
+                        <span className="sm:hidden">
+                            {fr.nav.newServiceOrderShort}
+                        </span>
+                        <span className="hidden sm:inline">
+                            {fr.nav.newServiceOrder}
+                        </span>
+                    </Link>
+                </Button>
+
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button
+                            variant="ghost"
+                            size="icon-lg"
+                            className="rounded-full"
+                            aria-label={fr.user.menu}
+                            data-test="user-menu-button"
+                        >
+                            <UserAvatar user={auth.user} />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-60" align="end">
+                        <UserMenuContent user={auth.user} />
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
         </header>
     );

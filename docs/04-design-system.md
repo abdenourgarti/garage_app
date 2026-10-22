@@ -23,7 +23,7 @@ Définir les tokens dans `resources/css/app.css` (variables du thème shadcn, en
 | Token | Clair | Usage |
 | --- | --- | --- |
 | `--primary` | Bleu pétrole `#0F5C6E` | Boutons principaux, liens, éléments actifs |
-| `--accent` | Ambre huile `#F2A516` | Mise en avant ponctuelle (prestation en cours, rappels) |
+| `--highlight` | Ambre huile `#F2A516` | Mise en avant ponctuelle (bouton « + Nouvelle prestation », prestation en cours, rappels). `--accent` reste le gris neutre des survols shadcn |
 | `--background` / `--card` | `#F7F8FA` / `#FFFFFF` | Fond / cartes |
 | `--foreground` / `--muted-foreground` | `#111827` / `#6B7280` | Texte / texte secondaire |
 | `--success` | `#15803D` | Payée, stock OK, bénéfice positif |

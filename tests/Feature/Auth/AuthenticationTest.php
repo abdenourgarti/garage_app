@@ -1,92 +1,75 @@
 <?php
 
-namespace Tests\Feature\Auth;
-
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Database\Seeders\ReferenceDataSeeder;
 use Illuminate\Support\Facades\RateLimiter;
-use Laravel\Fortify\Features;
-use Tests\TestCase;
 
-class AuthenticationTest extends TestCase
-{
-    use RefreshDatabase;
+test('login screen can be rendered', function () {
+    $this->get(route('login'))->assertOk();
+});
 
-    public function test_login_screen_can_be_rendered()
-    {
-        $response = $this->get(route('login'));
+test('users can log in with their username', function () {
+    $user = User::factory()->create(['username' => 'karim']);
 
-        $response->assertOk();
-    }
+    $this->post(route('login.store'), ['username' => 'karim', 'password' => 'password'])
+        ->assertRedirect(route('dashboard', absolute: false));
 
-    public function test_users_can_authenticate_using_the_login_screen()
-    {
-        $user = User::factory()->create();
+    $this->assertAuthenticatedAs($user);
+});
 
-        $response = $this->post(route('login.store'), [
-            'email' => $user->email,
-            'password' => 'password',
-        ]);
+test('username is case insensitive', function () {
+    User::factory()->create(['username' => 'karim']);
 
-        $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
-    }
+    $this->post(route('login.store'), ['username' => 'Karim', 'password' => 'password']);
 
-    public function test_users_with_two_factor_enabled_are_redirected_to_two_factor_challenge()
-    {
-        $this->skipUnlessFortifyHas(Features::twoFactorAuthentication());
+    $this->assertAuthenticated();
+});
 
-        Features::twoFactorAuthentication([
-            'confirm' => true,
-            'confirmPassword' => true,
-        ]);
+test('users can not log in with a wrong password', function () {
+    User::factory()->create(['username' => 'karim']);
 
-        $user = User::factory()->withTwoFactor()->create();
+    $this->post(route('login.store'), ['username' => 'karim', 'password' => 'wrong-password'])
+        ->assertSessionHasErrors('username');
 
-        $response = $this->post(route('login'), [
-            'email' => $user->email,
-            'password' => 'password',
-        ]);
+    $this->assertGuest();
+});
 
-        $response->assertRedirect(route('two-factor.login'));
-        $response->assertSessionHas('login.id', $user->id);
-        $this->assertGuest();
-    }
+test('inactive users can not log in', function () {
+    User::factory()->inactive()->create(['username' => 'karim']);
 
-    public function test_users_can_not_authenticate_with_invalid_password()
-    {
-        $user = User::factory()->create();
+    $this->post(route('login.store'), ['username' => 'karim', 'password' => 'password'])
+        ->assertSessionHasErrors(['username' => 'Ce compte est désactivé. Contactez le gérant.']);
 
-        $this->post(route('login.store'), [
-            'email' => $user->email,
-            'password' => 'wrong-password',
-        ]);
+    $this->assertGuest();
+});
 
-        $this->assertGuest();
-    }
+test('users can log out', function () {
+    $this->actingAs(User::factory()->create())
+        ->post(route('logout'))
+        ->assertRedirect('/');
 
-    public function test_users_can_logout()
-    {
-        $user = User::factory()->create();
+    $this->assertGuest();
+});
 
-        $response = $this->actingAs($user)->post(route('logout'));
+test('login is rate limited', function () {
+    User::factory()->create(['username' => 'karim']);
 
-        $response->assertRedirect(route('home'));
+    RateLimiter::increment(md5('login'.implode('|', ['karim', '127.0.0.1'])), amount: 5);
 
-        $this->assertGuest();
-    }
+    $this->post(route('login.store'), ['username' => 'karim', 'password' => 'wrong-password'])
+        ->assertTooManyRequests();
+});
 
-    public function test_users_are_rate_limited()
-    {
-        $user = User::factory()->create();
+test('registration and password reset by e-mail are disabled', function (string $uri) {
+    $this->get($uri)->assertNotFound();
+})->with(['/register', '/forgot-password', '/reset-password/token', '/email/verify', '/two-factor-challenge']);
 
-        RateLimiter::increment(md5('login'.implode('|', [$user->email, '127.0.0.1'])), amount: 5);
+test('the initial gerant account is seeded from config', function () {
+    config(['garage.admin.username' => 'patron', 'garage.admin.password' => 'secret123']);
 
-        $response = $this->post(route('login.store'), [
-            'email' => $user->email,
-            'password' => 'wrong-password',
-        ]);
+    $this->seed(ReferenceDataSeeder::class);
 
-        $response->assertTooManyRequests();
-    }
-}
+    $this->post(route('login.store'), ['username' => 'patron', 'password' => 'secret123']);
+
+    expect(auth()->user()->isGerant())->toBeTrue();
+});

@@ -68,6 +68,7 @@ php artisan test          # tests Pest
 vendor/bin/pint           # format PHP
 npm run check             # lint + format (Vite+ : oxlint, oxfmt) ; `npm run check:fix` pour corriger
 npm run types:check       # tsc --noEmit
+npm test                  # tests JS (Vite+ / Vitest) : lib/format, lib/period
 npm run build             # build de production
 ```
 

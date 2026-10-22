@@ -1,21 +1,14 @@
-import { usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
-import type { AppVariant } from '@/types';
+import { useIsDesktop } from '@/hooks/use-mobile';
 
-type Props = {
-    children: ReactNode;
-    variant?: AppVariant;
-};
+/** Sidebar pilotée par la largeur d'écran uniquement : pas de bouton à comprendre pour l'utilisateur. */
+export function AppShell({ children }: { children: ReactNode }) {
+    const isDesktop = useIsDesktop();
 
-export function AppShell({ children, variant = 'sidebar' }: Props) {
-    const isOpen = usePage().props.sidebarOpen;
-
-    if (variant === 'header') {
-        return (
-            <div className="flex min-h-screen w-full flex-col">{children}</div>
-        );
-    }
-
-    return <SidebarProvider defaultOpen={isOpen}>{children}</SidebarProvider>;
+    return (
+        <SidebarProvider open={isDesktop} onOpenChange={() => {}}>
+            {children}
+        </SidebarProvider>
+    );
 }

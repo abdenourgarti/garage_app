@@ -1,31 +1,29 @@
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useInitials } from '@/hooks/use-initials';
+import { fr } from '@/lib/i18n/fr';
 import type { User } from '@/types';
 
-export function UserInfo({
-    user,
-    showEmail = false,
-}: {
-    user: User;
-    showEmail?: boolean;
-}) {
+export function UserAvatar({ user }: { user: User }) {
     const getInitials = useInitials();
 
     return (
+        <Avatar className="size-9 overflow-hidden rounded-full">
+            <AvatarFallback className="bg-secondary font-medium text-secondary-foreground">
+                {getInitials(user.name)}
+            </AvatarFallback>
+        </Avatar>
+    );
+}
+
+export function UserInfo({ user }: { user: User }) {
+    return (
         <>
-            <Avatar className="h-8 w-8 overflow-hidden rounded-full">
-                <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white">
-                    {getInitials(user.name)}
-                </AvatarFallback>
-            </Avatar>
+            <UserAvatar user={user} />
             <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.name}</span>
-                {showEmail && (
-                    <span className="truncate text-xs text-muted-foreground">
-                        {user.email}
-                    </span>
-                )}
+                <span className="truncate text-xs text-muted-foreground">
+                    {fr.user.roles[user.role]}
+                </span>
             </div>
         </>
     );

@@ -15,6 +15,8 @@ export type FieldKind =
     | 'code'
     | 'text'
     | 'textarea'
+    | 'email'
+    | 'url'
     | 'money'
     | 'km'
     | 'liters'
@@ -85,6 +87,14 @@ export const referenceFields: Record<ReferenceTypeValue, Field[]> = {
     suppliers: [
         name,
         { name: 'phone', label: f.phone, kind: 'text' },
+        { name: 'email', label: f.email, kind: 'email' },
+        { name: 'address', label: f.address, kind: 'text' },
+        {
+            name: 'maps_url',
+            label: f.mapsUrl,
+            kind: 'url',
+            hint: f.mapsUrlHint,
+        },
         { name: 'notes', label: f.notes, kind: 'textarea' },
     ],
     'expense-categories': [name],

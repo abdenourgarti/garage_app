@@ -82,6 +82,11 @@ export const fr = {
             reminderKmHint:
                 'Prochaine visite conseillée après ce nombre de kilomètres. Vide : pas de rappel.',
             phone: 'Téléphone',
+            email: 'E-mail',
+            address: 'Adresse',
+            mapsUrl: 'Lien Google Maps',
+            mapsUrlHint: 'Copiez le lien « Partager » de Google Maps.',
+            openMap: 'Ouvrir la carte',
             notes: 'Remarque',
             isCash: 'Paiement en espèces',
             isCashHint: 'Compte dans le solde de caisse du jour.',

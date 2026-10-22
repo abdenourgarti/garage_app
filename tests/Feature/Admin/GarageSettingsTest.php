@@ -41,6 +41,19 @@ test('the gerant can save the garage settings and its logo', function () {
     $this->get(route('garage.logo'))->assertOk();
 });
 
+test('the form is sent as POST with _method=put, like the browser does with a file', function () {
+    $this->actingAs($this->gerant)
+        ->post(route('admin.garage.update'), [
+            '_method' => 'put',
+            'name' => 'AMINE AUTO',
+            'reminder_threshold_km' => '10000',
+            'logo' => UploadedFile::fake()->image('logo.png'),
+        ])
+        ->assertSessionHasNoErrors();
+
+    expect(app(SettingsService::class)->get(SettingsService::GARAGE_NAME))->toBe('AMINE AUTO');
+});
+
 test('replacing or removing the logo deletes the old file', function () {
     $payload = ['name' => 'Garage', 'reminder_threshold_km' => 1000];
     $this->actingAs($this->gerant)->put(route('admin.garage.update'), [...$payload, 'logo' => UploadedFile::fake()->image('a.png')]);

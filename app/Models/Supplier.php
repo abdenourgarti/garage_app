@@ -11,10 +11,13 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * @property string $name
  * @property string|null $phone
+ * @property string|null $email
+ * @property string|null $address
+ * @property string|null $maps_url
  * @property string|null $notes
  * @property bool $is_active
  */
-#[Fillable(['name', 'phone', 'notes', 'is_active'])]
+#[Fillable(['name', 'phone', 'email', 'address', 'maps_url', 'notes', 'is_active'])]
 class Supplier extends Model
 {
     /** @use HasFactory<SupplierFactory> */

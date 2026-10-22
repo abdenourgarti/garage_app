@@ -48,6 +48,19 @@ function display(field: Field, row: ReferenceRow) {
             return value ? formatQuantity(value as number, 'km') : '—';
         case 'boolean':
             return value ? fr.admin.yes : fr.admin.no;
+        case 'url':
+            return value ? (
+                <a
+                    href={cellText(value)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary underline-offset-4 hover:underline"
+                >
+                    {fr.admin.fields.openMap}
+                </a>
+            ) : (
+                '—'
+            );
         case 'brand':
             return row.brand?.name ?? '—';
         default:

@@ -46,6 +46,7 @@
 - **Phase 2** — Wilayas : **69** (loi n° 26-06 d'avril 2026, numérotation 59–69 du décret présidentiel n° 26-206 du 25 mai 2026, JO n° 40). Les numéros 59–69 parus dans la presse en novembre 2025 sont dépassés.
 - **Phase 2** — Seeder : 41 marques, 503 modèles anciens et récents, capacité d'huile vide (dépend de la motorisation). Rappels usuels : vidange moteur 10 000 km, vidange boîte 60 000 km, kit de distribution 60 000 km (modifiables par le gérant) ; prix MO à 0.
 - **Phase 2** — Logo du garage stocké en privé (`storage/app/private/garage`) et servi par `/garage/logo` : pas de `storage:link` (lien symbolique souvent refusé sous Windows). SVG refusé.
+- **Phase 2 (correctif)** — Formulaire Garage : un PUT multipart (avec fichier) arrive vide côté PHP → envoyé en POST + `_method=put`. Fournisseurs : champs optionnels e-mail, adresse et lien Google Maps (http/https uniquement). Tous les formulaires de Paramètres vérifiés de bout en bout dans un vrai navigateur (ajout, modification, désactivation, suppression, refus si utilisé, envoi du logo).
 
 ## Points ouverts
 

@@ -24,7 +24,7 @@ dataset('references', [
     'marques' => ['brands', Brand::class, ['name' => 'Renault'], ['name' => 'Renault Trucks']],
     'énergies' => ['energies', Energy::class, ['name' => 'GPL'], ['name' => 'GPL-c']],
     'catégories d’articles' => ['article-categories', ArticleCategory::class, ['name' => 'Filtres'], ['name' => 'Filtration']],
-    'fournisseurs' => ['suppliers', Supplier::class, ['name' => 'Pièces Auto Blida', 'phone' => '0550 11 22 33', 'notes' => null], ['name' => 'Pièces Auto Blida', 'phone' => '0661 00 00 00', 'notes' => 'Livraison le mardi']],
+    'fournisseurs' => ['suppliers', Supplier::class, ['name' => 'Pièces Auto Blida', 'phone' => '0550 11 22 33', 'notes' => null], ['name' => 'Pièces Auto Blida', 'phone' => '0661 00 00 00', 'email' => 'contact@pieces-blida.dz', 'address' => 'Zone industrielle, Blida', 'maps_url' => 'https://maps.app.goo.gl/AbC123', 'notes' => 'Livraison le mardi']],
     'catégories de dépenses' => ['expense-categories', ExpenseCategory::class, ['name' => 'Loyer'], ['name' => 'Loyer local']],
     'modes de paiement' => ['payment-methods', PaymentMethod::class, ['name' => 'Espèces', 'is_cash' => true], ['name' => 'Espèces DA', 'is_cash' => true]],
     'wilayas' => ['wilayas', Wilaya::class, ['code' => '16', 'name' => 'Alger'], ['code' => '16', 'name' => 'Alger Centre']],
@@ -95,6 +95,26 @@ test('vehicle models are listed by brand, then by name', function () {
             ->where('rows.data.0.name', '100')
             ->where('rows.data.1.name', 'A3')
             ->where('rows.data.2.brand.name', 'Peugeot'));
+});
+
+test('supplier contact fields are optional but must be valid', function () {
+    $this->post(route('admin.references.store', 'suppliers'), ['name' => 'Sans contact'])->assertSessionHasNoErrors();
+
+    $this->post(route('admin.references.store', 'suppliers'), [
+        'name' => 'Mauvais contact',
+        'email' => 'pas-un-email',
+        'maps_url' => 'javascript:alert(1)',
+    ])->assertSessionHasErrors(['email', 'maps_url']);
+
+    $this->put(route('admin.references.update', ['suppliers', Supplier::firstOrFail()->id]), [
+        'name' => 'Sans contact',
+        'email' => 'a@b.dz',
+        'address' => 'Baba Ali',
+        'maps_url' => 'https://maps.app.goo.gl/x',
+    ])->assertSessionHasNoErrors();
+
+    expect(Supplier::firstOrFail()->only(['email', 'address', 'maps_url']))
+        ->toBe(['email' => 'a@b.dz', 'address' => 'Baba Ali', 'maps_url' => 'https://maps.app.goo.gl/x']);
 });
 
 test('a wilaya code has exactly two digits', function () {

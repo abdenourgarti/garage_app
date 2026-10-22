@@ -34,6 +34,9 @@ class ReferenceRequest extends FormRequest
             'default_labor_price' => "prix de main-d'œuvre",
             'reminder_km' => 'rappel',
             'phone' => 'téléphone',
+            'email' => 'adresse e-mail',
+            'address' => 'adresse',
+            'maps_url' => 'lien Google Maps',
             'notes' => 'remarque',
         ];
     }

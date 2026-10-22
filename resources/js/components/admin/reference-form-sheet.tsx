@@ -156,6 +156,11 @@ export function ReferenceFormSheet({
                         onChange={(event) =>
                             form.setData(field.name, event.target.value)
                         }
+                        type={
+                            field.kind === 'email' || field.kind === 'url'
+                                ? field.kind
+                                : 'text'
+                        }
                         inputMode={
                             field.kind === 'code' ? 'numeric' : undefined
                         }

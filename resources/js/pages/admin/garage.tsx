@@ -51,8 +51,9 @@ export default function Garage({ settings, logoUrl }: Props) {
 
     const submit = (event: React.FormEvent) => {
         event.preventDefault();
-        // PUT avec fichier : Inertia envoie un POST multipart + _method=put.
-        form.submit(GarageSettingsController.update(), {
+        // PHP ne lit pas un PUT multipart (fichier) : on envoie un POST avec _method=put, que Laravel reconnaît.
+        form.transform((data) => ({ ...data, _method: 'put' }));
+        form.post(GarageSettingsController.update.url(), {
             forceFormData: true,
             preserveScroll: true,
             onSuccess: (page) => {

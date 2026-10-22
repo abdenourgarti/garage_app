@@ -109,6 +109,9 @@ enum ReferenceType: string
             self::Suppliers => [
                 'name' => ['required', 'string', 'max:150'],
                 'phone' => ['nullable', 'string', 'max:30'],
+                'email' => ['nullable', 'email', 'max:150'],
+                'address' => ['nullable', 'string', 'max:255'],
+                'maps_url' => ['nullable', 'url:http,https', 'max:2048'],
                 'notes' => ['nullable', 'string', 'max:1000'],
             ],
             self::PaymentMethods => [

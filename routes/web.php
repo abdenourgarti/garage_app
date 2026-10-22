@@ -6,6 +6,11 @@ use App\Http\Controllers\Admin\ReferenceController;
 use App\Http\Controllers\Clients\ClientController;
 use App\Http\Controllers\Clients\LookupController;
 use App\Http\Controllers\Clients\VehicleController;
+use App\Http\Controllers\Stock\ArticleController;
+use App\Http\Controllers\Stock\OilProductController;
+use App\Http\Controllers\Stock\PurchaseController;
+use App\Http\Controllers\Stock\PurchasePaymentController;
+use App\Http\Controllers\Stock\SupplierController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -19,7 +24,6 @@ Route::middleware('auth')->group(function () {
     Route::inertia('service-orders/create', 'coming-soon', ['title' => 'Nouvelle prestation'])->name('service-orders.create');
     Route::inertia('appointments', 'coming-soon', ['title' => 'Rendez-vous'])->name('appointments.index');
     Route::inertia('invoices', 'coming-soon', ['title' => 'Factures'])->name('invoices.index');
-    Route::inertia('stock', 'coming-soon', ['title' => 'Stock et achats'])->name('stock.index');
 
     Route::inertia('cash', 'coming-soon', ['title' => 'Caisse'])->middleware('can:manage-cash')->name('cash.index');
     Route::inertia('employees', 'coming-soon', ['title' => 'Employés'])->middleware('can:manage-employees')->name('employees.index');
@@ -38,11 +42,41 @@ Route::middleware('auth')->group(function () {
     Route::patch('vehicles/{vehicle}/toggle', [VehicleController::class, 'toggle'])->name('vehicles.toggle');
     Route::post('vehicles/{vehicle}/transfer', [VehicleController::class, 'transfer'])->name('vehicles.transfer');
 
+    // Stock, huiles, achats et fournisseurs (gérant et employé).
+    Route::prefix('stock')->group(function () {
+        Route::get('/', [ArticleController::class, 'index'])->name('stock.index');
+        Route::post('articles', [ArticleController::class, 'store'])->name('articles.store');
+        Route::get('articles/{article}', [ArticleController::class, 'show'])->name('articles.show');
+        Route::put('articles/{article}', [ArticleController::class, 'update'])->name('articles.update');
+        Route::patch('articles/{article}/toggle', [ArticleController::class, 'toggle'])->name('articles.toggle');
+        Route::post('articles/{article}/adjust', [ArticleController::class, 'adjust'])->name('articles.adjust');
+        Route::post('articles/{article}/open-can', [ArticleController::class, 'openCan'])->name('articles.open-can');
+
+        Route::post('oils', [OilProductController::class, 'store'])->name('oils.store');
+        Route::put('oils/{oilProduct}', [OilProductController::class, 'update'])->name('oils.update');
+
+        Route::get('purchases', [PurchaseController::class, 'index'])->name('purchases.index');
+        Route::get('purchases/create', [PurchaseController::class, 'create'])->name('purchases.create');
+        Route::post('purchases', [PurchaseController::class, 'store'])->name('purchases.store');
+        Route::get('purchases/{purchase}', [PurchaseController::class, 'show'])->name('purchases.show');
+        Route::get('purchases/{purchase}/edit', [PurchaseController::class, 'edit'])->name('purchases.edit');
+        Route::put('purchases/{purchase}', [PurchaseController::class, 'update'])->name('purchases.update');
+        Route::post('purchases/{purchase}/receive', [PurchaseController::class, 'receive'])->name('purchases.receive');
+        Route::post('purchases/{purchase}/cancel', [PurchaseController::class, 'cancel'])->name('purchases.cancel');
+        Route::get('purchases/{purchase}/document', [PurchaseController::class, 'document'])->name('purchases.document');
+        Route::post('purchases/{purchase}/payments', [PurchasePaymentController::class, 'store'])->name('purchases.payments.store');
+        Route::get('purchase-payments/{payment}/proof', [PurchasePaymentController::class, 'proof'])->name('purchase-payments.proof');
+
+        Route::get('suppliers', [SupplierController::class, 'index'])->name('suppliers.index');
+        Route::get('suppliers/{supplier}', [SupplierController::class, 'show'])->name('suppliers.show');
+    });
+
     // Recherches JSON des sélecteurs (SearchSelect).
     Route::prefix('lookup')->name('lookup.')->group(function () {
         Route::get('clients', [LookupController::class, 'clients'])->name('clients');
         Route::get('clients/{client}/vehicles', [LookupController::class, 'clientVehicles'])->name('client-vehicles');
         Route::get('vehicles', [LookupController::class, 'vehicles'])->name('vehicles');
+        Route::get('articles', [LookupController::class, 'articles'])->name('articles');
     });
 
     // Logo du garage : lisible par tous (factures, bilans), modifiable par le gérant.

@@ -35,7 +35,7 @@ employees ──1:n── salary_payments ──► expenses        other_income
 | `vehicle_models` | `brand_id` FK, `name`, `oil_capacity_l` decimal(4,2) null, `is_active` ; unique(`brand_id`,`name`) |
 | `service_types` | `name` unique, `default_labor_price` decimal(12,2) default 0, `requires_mileage` bool, `reminder_km` int null, `is_active` |
 | `article_categories` | `name` unique, `is_active` |
-| `suppliers` | `name`, `phone` null, `notes` null, `is_active` |
+| `suppliers` | `name`, `phone` null, `email` null, `address` null, `maps_url` null (lien Google Maps), `notes` null, `is_active` |
 | `expense_categories` | `name` unique, `system_key` null unique (`purchases`, `salaries`, `advances`, `external_parts`), `is_active` |
 | `payment_methods` | `name` unique, `is_cash` bool, `is_active` |
 | `settings` | `key` unique, `value` text null (pas de timestamps obligatoires) |
@@ -75,9 +75,9 @@ Règles :
 
 | Table | Colonnes |
 | --- | --- |
-| `purchases` | `supplier_id` FK, `purchased_at` date, `supplier_invoice_ref` null, `total`, `amount_paid` default 0, `notes` null, `user_id` FK |
+| `purchases` | `supplier_id` FK, `status` enum(`draft`,`ordered`,`received`,`cancelled`), `purchased_at` date, `received_at` date null, `supplier_invoice_ref` null, `total`, `amount_paid` default 0, `notes` null, `document_path` null (facture ou bon du fournisseur, stockage privé), `user_id` FK |
 | `purchase_items` | `purchase_id` FK cascade, `article_id` FK, `quantity`, `unit_price`, `line_total` |
-| `purchase_payments` | `purchase_id` FK, `amount`, `paid_at` date, `payment_method_id` FK, `user_id` FK |
+| `purchase_payments` | `purchase_id` FK, `amount`, `paid_at` date, `payment_method_id` FK, `proof_path` null (reçu, chèque, virement : image ou PDF privé), `user_id` FK |
 
 Reste dû d'un achat = `total − amount_paid` ; dette fournisseur = somme des restes.
 
@@ -104,7 +104,7 @@ Crédit client = somme de (`total − amount_paid`) des factures non annulées d
 
 | Table | Colonnes |
 | --- | --- |
-| `expenses` | `expense_category_id` FK, `label`, `amount`, `spent_at` date, `payment_method_id` FK null, `employee_id` FK null, `source_type`/`source_id` (morph : PurchasePayment, SalaryPayment, ServiceOrderPart) null, `notes` null, `user_id` FK |
+| `expenses` | `expense_category_id` FK, `label`, `amount`, `spent_at` date, `payment_method_id` FK null, `employee_id` FK null (ajouté en phase 10 avec `employees`), `source_type`/`source_id` (morph : PurchasePayment, SalaryPayment, ServiceOrderPart) null, `notes` null, `user_id` FK |
 | `other_incomes` | `label`, `amount`, `received_at` date, `payment_method_id` FK null, `notes` null, `user_id` FK |
 | `employees` | `name`, `position` null, `phone` null, `salary_type` enum(`monthly`,`daily`), `salary_amount`, `is_active` |
 | `salary_payments` | `employee_id` FK, `period` char(7) (`2026-10`), `days_worked` smallint null, `base_amount`, `advances_total`, `net_paid`, `paid_at` date, `user_id` FK ; unique(`employee_id`,`period`) |

@@ -104,15 +104,16 @@ et le menu React masque les entrées non autorisées (prop partagée `auth.can`)
 | --- | --- |
 | `CreateClientWithVehicle` | Client + premier véhicule (création rapide depuis une prestation) |
 | `TransferVehicleOwnership` | Clôt l'`ownership` courante, en ouvre une nouvelle, met à jour `vehicles.client_id` ; prestations inchangées |
-| `RecordPurchase` | Achat + lignes ; `StockService::in()` par ligne ; si montant payé > 0 → `PurchasePayment` + `Expense` (catégorie système « Achats pièces ») |
+| `RecordPurchase` | Achat (brouillon, commandé ou reçu directement) + lignes, total recalculé ; à la réception (`ReceivePurchase`) `StockService::in()` par ligne et prix d'achat de l'article = dernier prix payé ; si montant payé > 0 → `PaySupplier` |
+| `ReceivePurchase` / `CancelPurchase` | Réception : entrée en stock, statut `received`. Annulation : seulement brouillon ou commandé, et sans paiement |
 | `PaySupplier` | `PurchasePayment` + `Expense` sur un achat ayant un reste dû |
-| `AdjustStock` | Mouvement `correction` signé + motif obligatoire |
+| `AdjustStock` | Mouvement `adjustment` (écart entre le stock compté et le stock enregistré) signé + motif obligatoire |
 | `OpenOilCan` | Bidon −1 (mouvement `can_opened_out`) ; vrac + `volume_l` (mouvement `can_opened_in`) ; refuse si le format n'a pas de vrac lié |
 | `CreateServiceOrder` / `UpdateServiceOrder` | En-tête + lignes + pièces ; numéro attribué à la création ; modifiable tant que `en_cours` |
 | `CompleteServiceOrder` | Contrôles RG-06/07 ; sorties de stock des pièces `stock` (coût figé = prix d'achat courant) ; `Expense` pour chaque pièce `externe` ; met à jour `vehicles.last_mileage` ; statut `terminee` ; crée la facture via `GenerateInvoice` |
 | `GenerateInvoice` | Calcule sous-totaux MO / pièces, remise, total ; numéro `FA-…` ; statut `impayee` |
 | `RecordPayment` | `Payment` ; recalcule `amount_paid` et statut (`impayee` / `partielle` / `payee`) ; refuse un montant > reste à payer |
-| `CancelInvoice` (gérant) | Motif obligatoire ; paiements marqués annulés ; facture `annulee` ; prestation repasse `en_cours` ; pièces stock réintégrées (mouvement `cancellation`) ; dépenses des pièces externes conservées |
+| `CancelInvoice` (gérant) | Motif obligatoire ; paiements marqués annulés ; facture `annulee` ; prestation repasse `en_cours` ; pièces stock réintégrées (mouvement `cancellation_in`) ; dépenses des pièces externes conservées |
 | `RecordExpense` / `RecordOtherIncome` | Écriture simple datée |
 | `RecordSalaryAdvance` | `Expense` catégorie système « Avances » liée à l'employé |
 | `PaySalary` | Calcule base (mensuel, ou journalier × jours saisis) − avances du mois ; `SalaryPayment` + `Expense` « Salaires » ; une seule paie par employé et par mois |

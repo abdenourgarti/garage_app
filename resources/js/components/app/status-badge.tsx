@@ -21,6 +21,12 @@ const tones: { [T in StatusType]: Record<keyof Statuses[T], Tone> } = {
     },
     appointment: { prevu: 'primary', effectue: 'success', annule: 'muted' },
     stock: { ok: 'success', bas: 'warning', rupture: 'destructive' },
+    purchase: {
+        draft: 'muted',
+        ordered: 'primary',
+        received: 'success',
+        cancelled: 'muted',
+    },
 };
 
 const toneClasses: Record<Tone, { badge: string; dot: string }> = {

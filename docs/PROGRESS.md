@@ -8,7 +8,7 @@
 | 1 — Socle UI et authentification | ✅ Terminé | 22/10/2026 | Thème oklch clair/sombre (pétrole + ambre), Inter embarquée, sidebar 248 px / icônes / barre basse 5 entrées, connexion par nom d'utilisateur, rôles gérant/employé (`Gate::before`, `auth.can`), compte gérant seedé. 12 composants partagés + `/dev/ui`, CountUp porté sur GSAP. 31 tests Pest + 11 tests JS ; vérifié à 360/768/1280 px, aucune requête externe. |
 | 2 — Référentiels et paramètres | ✅ Terminé | 22/10/2026 | 11 tables, 9 référentiels gérés dans Paramètres > Référentiels (recherche, panneau d'ajout/modification, Actif/Inactif, suppression refusée si utilisé), catégories de dépenses système verrouillées, Paramètres > Garage (nom, logo, adresse, téléphone, seuil de rappel) via `SettingsService`. Seeder : 69 wilayas, 41 marques, 503 modèles. 59 tests Pest. |
 | 3 — Clients et véhicules | ✅ Terminé | 22/10/2026 | Listes Clients et Véhicules (recherche téléphone / nom / prénom / matricule / châssis, filtres wilaya et marque, cartes sur mobile), fiche client (onglets), fiche véhicule (plaque, infos, propriétaire, historique, emplacements carnet / vidange / documents). Actions `CreateVehicle`, `CreateClientWithVehicle`, `TransferVehicleOwnership` ; création rapide réutilisable (JSON) ; recherches JSON pour les sélecteurs. 90 tests Pest + parcours navigateur complet. |
-| 4 — Stock, huiles, achats | ⬜ À faire | | |
+| 4 — Stock, huiles, achats | ✅ Terminé | 22/10/2026 | Articles et huiles (fiche + formats bidon 5/4/1 L et vrac, chacun avec ses prix et son stock), `StockService` (stock = somme des mouvements), ouvrir un bidon, correction par stock compté, achats Brouillon → Commandée → Reçue / Annulée, paiements fournisseurs (dépense « Achats pièces ») avec preuve et facture jointes, fiches fournisseur (reste dû). Tests sur MariaDB : 111 Pest + 13 JS, parcours navigateur complet. |
 | 5 — Prestations | ⬜ À faire | | |
 | 6 — Factures et paiements | ⬜ À faire | | |
 | 7 — Recherche et historique | ⬜ À faire | | |
@@ -51,11 +51,16 @@
 - **Phase 3** — Pas de suppression de client ni de véhicule : désactivation seulement (ils porteront prestations et factures). Inactifs visibles dans les listes, absents des recherches JSON.
 - **Phase 3** — Liste des véhicules ajoutée (demande du client) : recherche en haut, fiche détail qui accueillera kilométrages, carnet, prochaine vidange et documents. Kilométrage facultatif saisissable à la création du véhicule.
 - **Phase 3** — Création rapide (`QuickClientSheet`) en JSON via `useHttp` : ne change pas de page, réutilisable dans l’écran prestation et dans « Changer de propriétaire » (création du nouveau client sur place, téléphone ou nom pré-rempli).
+- **Phase 4** — Tests sur une base MariaDB dédiée `garage_app_test` (`phpunit.xml`), jamais sur `garage_app` : chaque test vide les tables. Les verrous `lockForUpdate` et les décimaux sont ainsi testés sur le vrai moteur.
+- **Phase 4** — Huiles : `oil_products` (fiche sans prix ni stock) + un `article` par format (`oil_format`, `volume_l`, unité bidon ou litre). Tout le stock traite huiles et pièces de la même façon. Nom des formats généré : « Total Quartz 9000 5W-30, bidon 5 L ».
+- **Phase 4** — Achats à états (demande du client) : Brouillon, Commandée, Reçue (le stock entre à la réception), Annulée (seulement avant réception et sans paiement). Paiement possible dès la commande (acompte), plafonné au reste dû ; dette fournisseur = reste dû des achats reçus.
+- **Phase 4** — Pièces jointes facultatives (image ou PDF, 5 Mo, stockage privé servi par route authentifiée) : facture du fournisseur sur l’achat, preuve sur chaque paiement. Même mécanisme (`PrivateFile`) prévu pour les paiements clients (phase 6).
+- **Phase 4** — Prix d’achat de l’article = dernier prix payé à la réception (pas de moyenne pondérée). Correction de stock = saisie du stock compté, l’écart devient le mouvement. Ouvrir un bidon refusé sans format vrac actif ou sans bidon en stock. Un stock négatif reste possible pour les sorties de prestation (RG-11).
+- **Phase 4** — Montants calculés avec `bcmath` (`AppSupportDecimal`), jamais en flottants ; l’écran achat montre un aperçu des totaux calculé en centimes, le serveur recalcule. Types de mouvements du modèle de données (`adjustment`, `cancellation_in`) retenus, conception corrigée. `expenses.employee_id` reporté en phase 10.
 
 ## Points ouverts
 
 - Accès de l’employé à la caisse et au bénéfice : à confirmer avec le client avant la phase 11 (le CDC le réserve au gérant).
-- Tests sur SQLite en mémoire (`phpunit.xml`, défaut du kit) : passer à une base de test MariaDB avant les phases 4–5 (`lockForUpdate`, erreurs FK 23000).
 - Un utilisateur désactivé pendant sa session reste connecté jusqu'à expiration (8 h) : à traiter avec la gestion des utilisateurs (phase 8).
 - Changement forcé du mot de passe gérant par défaut à la première connexion : phase 8.
 - `public/favicon.ico` et `apple-touch-icon.png` sont encore ceux de Laravel (le `favicon.svg` est remplacé).

@@ -9,9 +9,8 @@ import {
     SheetTitle,
 } from '@/components/ui/sheet';
 import { UserInfo } from '@/components/user-info';
-import { useCurrentUrl } from '@/hooks/use-current-url';
 import { fr } from '@/lib/i18n/fr';
-import { useNavigation } from '@/lib/navigation';
+import { useIsNavActive, useNavigation } from '@/lib/navigation';
 import { cn } from '@/lib/utils';
 import { logout } from '@/routes';
 import { edit as editProfile } from '@/routes/profile';
@@ -23,10 +22,10 @@ const itemClass =
 export function AppBottomNav() {
     const { auth } = usePage().props;
     const { bottom, more } = useNavigation();
-    const { isCurrentOrParentUrl } = useCurrentUrl();
+    const isNavActive = useIsNavActive();
     const [open, setOpen] = useState(false);
 
-    const moreIsActive = more.some((item) => isCurrentOrParentUrl(item.href));
+    const moreIsActive = more.some(isNavActive);
 
     return (
         <>
@@ -35,7 +34,7 @@ export function AppBottomNav() {
                 className="fixed inset-x-0 bottom-0 z-30 flex border-t bg-card pb-[env(safe-area-inset-bottom)] md:hidden"
             >
                 {bottom.map((item) => {
-                    const active = isCurrentOrParentUrl(item.href);
+                    const active = isNavActive(item);
 
                     return (
                         <Link
@@ -87,7 +86,7 @@ export function AppBottomNav() {
                                 onClick={() => setOpen(false)}
                                 className={cn(
                                     'flex min-h-12 items-center gap-3 rounded-md px-3 text-base hover:bg-accent',
-                                    isCurrentOrParentUrl(item.href) &&
+                                    isNavActive(item) &&
                                         'bg-accent font-medium',
                                 )}
                             >

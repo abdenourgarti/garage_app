@@ -7,4 +7,6 @@ export type NavItem = {
     shortTitle?: string;
     href: NonNullable<InertiaLinkProps['href']>;
     icon?: LucideIcon | null;
+    /** Autres chemins où l'entrée est active (ex. /vehicles pour Clients). */
+    activeFor?: string[];
 };

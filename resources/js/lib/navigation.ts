@@ -10,6 +10,7 @@ import {
     Users,
     Wrench,
 } from 'lucide-react';
+import { useCurrentUrl } from '@/hooks/use-current-url';
 import { fr } from '@/lib/i18n/fr';
 import { dashboard } from '@/routes';
 import { index as admin } from '@/routes/admin';
@@ -37,6 +38,7 @@ export function useNavigation(): {
             title: fr.nav.clients,
             shortTitle: fr.nav.clientsShort,
             href: clients(),
+            activeFor: ['/vehicles'],
             icon: Car,
         },
         {
@@ -73,4 +75,13 @@ export function useNavigation(): {
         bottom,
         more,
     };
+}
+
+/** Entrée active sur son URL, ses sous-pages et ses chemins `activeFor`. */
+export function useIsNavActive(): (item: NavItem) => boolean {
+    const { isCurrentOrParentUrl } = useCurrentUrl();
+
+    return (item) =>
+        isCurrentOrParentUrl(item.href) ||
+        (item.activeFor ?? []).some((path) => isCurrentOrParentUrl(path));
 }

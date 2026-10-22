@@ -7,7 +7,7 @@
 | 0 — Initialisation | ✅ Terminé | 22/10/2026 | Laravel 13.38 + starter kit React (Inertia 3, Wayfinder, Fortify, Vite+) + Pest, MariaDB 11.5 en InnoDB, locale `fr`, fuseau Africa/Algiers, `lang/fr`, Boost 2.10 (Claude Code : guidelines, 7 skills, MCP). 40 tests verts. |
 | 1 — Socle UI et authentification | ✅ Terminé | 22/10/2026 | Thème oklch clair/sombre (pétrole + ambre), Inter embarquée, sidebar 248 px / icônes / barre basse 5 entrées, connexion par nom d'utilisateur, rôles gérant/employé (`Gate::before`, `auth.can`), compte gérant seedé. 12 composants partagés + `/dev/ui`, CountUp porté sur GSAP. 31 tests Pest + 11 tests JS ; vérifié à 360/768/1280 px, aucune requête externe. |
 | 2 — Référentiels et paramètres | ✅ Terminé | 22/10/2026 | 11 tables, 9 référentiels gérés dans Paramètres > Référentiels (recherche, panneau d'ajout/modification, Actif/Inactif, suppression refusée si utilisé), catégories de dépenses système verrouillées, Paramètres > Garage (nom, logo, adresse, téléphone, seuil de rappel) via `SettingsService`. Seeder : 69 wilayas, 41 marques, 503 modèles. 59 tests Pest. |
-| 3 — Clients et véhicules | ⬜ À faire | | |
+| 3 — Clients et véhicules | ✅ Terminé | 22/10/2026 | Listes Clients et Véhicules (recherche téléphone / nom / prénom / matricule / châssis, filtres wilaya et marque, cartes sur mobile), fiche client (onglets), fiche véhicule (plaque, infos, propriétaire, historique, emplacements carnet / vidange / documents). Actions `CreateVehicle`, `CreateClientWithVehicle`, `TransferVehicleOwnership` ; création rapide réutilisable (JSON) ; recherches JSON pour les sélecteurs. 90 tests Pest + parcours navigateur complet. |
 | 4 — Stock, huiles, achats | ⬜ À faire | | |
 | 5 — Prestations | ⬜ À faire | | |
 | 6 — Factures et paiements | ⬜ À faire | | |
@@ -47,6 +47,10 @@
 - **Phase 2** — Seeder : 41 marques, 503 modèles anciens et récents, capacité d'huile vide (dépend de la motorisation). Rappels usuels : vidange moteur 10 000 km, vidange boîte 60 000 km, kit de distribution 60 000 km (modifiables par le gérant) ; prix MO à 0.
 - **Phase 2** — Logo du garage stocké en privé (`storage/app/private/garage`) et servi par `/garage/logo` : pas de `storage:link` (lien symbolique souvent refusé sous Windows). SVG refusé.
 - **Phase 2 (correctif)** — Formulaire Garage : un PUT multipart (avec fichier) arrive vide côté PHP → envoyé en POST + `_method=put`. Fournisseurs : champs optionnels e-mail, adresse et lien Google Maps (http/https uniquement). Tous les formulaires de Paramètres vérifiés de bout en bout dans un vrai navigateur (ajout, modification, désactivation, suppression, refus si utilisé, envoi du logo).
+- **Phase 3** — Téléphone normalisé en chiffres, `+213` / `00213` → `0` : « 0550… » et « +213 550… » sont le même client. Matricule normalisé en lettres et chiffres majuscules ; châssis (VIN) facultatif mais unique. Message de doublon nominatif (« appartient déjà au client X »).
+- **Phase 3** — Pas de suppression de client ni de véhicule : désactivation seulement (ils porteront prestations et factures). Inactifs visibles dans les listes, absents des recherches JSON.
+- **Phase 3** — Liste des véhicules ajoutée (demande du client) : recherche en haut, fiche détail qui accueillera kilométrages, carnet, prochaine vidange et documents. Kilométrage facultatif saisissable à la création du véhicule.
+- **Phase 3** — Création rapide (`QuickClientSheet`) en JSON via `useHttp` : ne change pas de page, réutilisable dans l’écran prestation et dans « Changer de propriétaire » (création du nouveau client sur place, téléphone ou nom pré-rempli).
 
 ## Points ouverts
 

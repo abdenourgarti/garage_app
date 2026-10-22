@@ -5,11 +5,11 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { useCurrentUrl } from '@/hooks/use-current-url';
+import { useIsNavActive } from '@/lib/navigation';
 import type { NavItem } from '@/types';
 
 export function NavMain({ items }: { items: NavItem[] }) {
-    const { isCurrentOrParentUrl } = useCurrentUrl();
+    const isNavActive = useIsNavActive();
 
     return (
         <SidebarGroup className="px-2 py-0">
@@ -18,7 +18,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
                     <SidebarMenuItem key={item.title}>
                         <SidebarMenuButton
                             asChild
-                            isActive={isCurrentOrParentUrl(item.href)}
+                            isActive={isNavActive(item)}
                             tooltip={{ children: item.title }}
                             className="text-sidebar-foreground/80 data-[active=true]:shadow-[inset_3px_0_0_var(--sidebar-primary)]"
                         >

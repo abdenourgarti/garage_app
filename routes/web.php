@@ -3,6 +3,9 @@
 use App\Enums\ReferenceType;
 use App\Http\Controllers\Admin\GarageSettingsController;
 use App\Http\Controllers\Admin\ReferenceController;
+use App\Http\Controllers\Clients\ClientController;
+use App\Http\Controllers\Clients\LookupController;
+use App\Http\Controllers\Clients\VehicleController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -14,13 +17,33 @@ Route::middleware('auth')->group(function () {
     // shortcut: pages « Bientôt disponible » le temps que chaque module soit livré (phases 3 à 14).
     Route::inertia('service-orders', 'coming-soon', ['title' => 'Prestations'])->name('service-orders.index');
     Route::inertia('service-orders/create', 'coming-soon', ['title' => 'Nouvelle prestation'])->name('service-orders.create');
-    Route::inertia('clients', 'coming-soon', ['title' => 'Clients et véhicules'])->name('clients.index');
     Route::inertia('appointments', 'coming-soon', ['title' => 'Rendez-vous'])->name('appointments.index');
     Route::inertia('invoices', 'coming-soon', ['title' => 'Factures'])->name('invoices.index');
     Route::inertia('stock', 'coming-soon', ['title' => 'Stock et achats'])->name('stock.index');
 
     Route::inertia('cash', 'coming-soon', ['title' => 'Caisse'])->middleware('can:manage-cash')->name('cash.index');
     Route::inertia('employees', 'coming-soon', ['title' => 'Employés'])->middleware('can:manage-employees')->name('employees.index');
+
+    // Clients et véhicules (gérant et employé).
+    Route::get('clients', [ClientController::class, 'index'])->name('clients.index');
+    Route::post('clients/quick', [ClientController::class, 'quickStore'])->name('clients.quick-store');
+    Route::get('clients/{client}', [ClientController::class, 'show'])->name('clients.show');
+    Route::put('clients/{client}', [ClientController::class, 'update'])->name('clients.update');
+    Route::patch('clients/{client}/toggle', [ClientController::class, 'toggle'])->name('clients.toggle');
+    Route::post('clients/{client}/vehicles', [VehicleController::class, 'store'])->name('vehicles.store');
+
+    Route::get('vehicles', [VehicleController::class, 'index'])->name('vehicles.index');
+    Route::get('vehicles/{vehicle}', [VehicleController::class, 'show'])->name('vehicles.show');
+    Route::put('vehicles/{vehicle}', [VehicleController::class, 'update'])->name('vehicles.update');
+    Route::patch('vehicles/{vehicle}/toggle', [VehicleController::class, 'toggle'])->name('vehicles.toggle');
+    Route::post('vehicles/{vehicle}/transfer', [VehicleController::class, 'transfer'])->name('vehicles.transfer');
+
+    // Recherches JSON des sélecteurs (SearchSelect).
+    Route::prefix('lookup')->name('lookup.')->group(function () {
+        Route::get('clients', [LookupController::class, 'clients'])->name('clients');
+        Route::get('clients/{client}/vehicles', [LookupController::class, 'clientVehicles'])->name('client-vehicles');
+        Route::get('vehicles', [LookupController::class, 'vehicles'])->name('vehicles');
+    });
 
     // Logo du garage : lisible par tous (factures, bilans), modifiable par le gérant.
     Route::get('garage/logo', [GarageSettingsController::class, 'logo'])->name('garage.logo');

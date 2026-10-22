@@ -105,6 +105,119 @@ export const fr = {
         },
     },
 
+    clients: {
+        title: 'Clients et véhicules',
+        description:
+            'Retrouvez un client par son téléphone, son nom ou un matricule.',
+        tabClients: 'Clients',
+        tabVehicles: 'Véhicules',
+        newClient: 'Nouveau client',
+        searchClients: 'Téléphone, nom, prénom ou matricule…',
+        searchVehicles: 'Matricule, châssis, marque, modèle ou propriétaire…',
+        allWilayas: 'Toutes les wilayas',
+        allBrands: 'Toutes les marques',
+        inactive: 'Inactif',
+        emptyTitle: 'Aucun client',
+        emptyText: 'Ajoutez votre premier client pour commencer.',
+        emptyVehiclesTitle: 'Aucun véhicule',
+        emptyVehiclesText:
+            'Les véhicules s’ajoutent depuis la fiche d’un client.',
+        fields: {
+            lastName: 'Nom',
+            firstName: 'Prénom',
+            phone: 'Téléphone',
+            wilaya: 'Wilaya',
+            notes: 'Remarque',
+        },
+        name: 'Nom',
+        vehicles: 'Véhicules',
+        vehicleCount: (count: number) =>
+            count === 0
+                ? 'Aucun véhicule'
+                : count === 1
+                  ? '1 véhicule'
+                  : `${count} véhicules`,
+        tabs: {
+            vehicles: 'Véhicules',
+            serviceOrders: 'Prestations',
+            invoices: 'Factures',
+            credit: 'Crédit',
+        },
+        creditTitle: 'Crédit restant',
+        creditText:
+            'Somme des factures non réglées. Les factures arrivent avec la phase des prestations.',
+        serviceOrdersEmpty: 'Les prestations de ce client apparaîtront ici.',
+        invoicesEmpty: 'Les factures de ce client apparaîtront ici.',
+        edit: 'Modifier',
+        editClient: 'Modifier le client',
+        deactivate: 'Désactiver',
+        reactivate: 'Réactiver',
+        deactivateClientTitle: 'Désactiver ce client ?',
+        deactivateClientText:
+            'Il n’apparaîtra plus dans les recherches des nouvelles prestations. Son historique est conservé et vous pourrez le réactiver.',
+        call: 'Appeler',
+        since: (date: string) => `Client depuis le ${date}`,
+        quick: {
+            title: 'Nouveau client',
+            description: 'Le téléphone suffit à retrouver le client plus tard.',
+            withVehicle: 'Ajouter un véhicule maintenant',
+            vehicleSection: 'Véhicule',
+            created: 'Client ajouté.',
+            createdWithVehicle: 'Client et véhicule ajoutés.',
+        },
+    },
+
+    vehicles: {
+        title: 'Véhicule',
+        addVehicle: 'Ajouter un véhicule',
+        editVehicle: 'Modifier le véhicule',
+        fields: {
+            plate: 'Matricule',
+            plateHint: 'Tel qu’écrit sur la plaque, ex. 01234-118-16.',
+            vin: 'Numéro de châssis',
+            vinHint:
+                'Recommandé : il identifie le véhicule même si la plaque change.',
+            brand: 'Marque',
+            model: 'Modèle',
+            modelPlaceholder: 'Choisir la marque d’abord',
+            year: 'Année',
+            energy: 'Énergie',
+            mileage: 'Kilométrage actuel',
+            mileageHint:
+                'Facultatif : ensuite mis à jour par chaque prestation.',
+            notes: 'Remarque',
+        },
+        vehicle: 'Véhicule',
+        owner: 'Propriétaire',
+        currentOwner: 'Propriétaire actuel',
+        lastMileage: 'Dernier kilométrage',
+        unknown: 'Non renseigné',
+        details: 'Informations',
+        changeOwner: 'Changer de propriétaire',
+        changeOwnerText:
+            'Le véhicule passe au nouveau propriétaire avec tout son historique : les prestations ne bougent pas.',
+        newOwner: 'Nouveau propriétaire',
+        newOwnerPlaceholder: 'Rechercher par téléphone, nom ou matricule',
+        transferDate: 'Date du changement',
+        confirmTransfer: 'Changer de propriétaire',
+        ownersHistory: 'Historique des propriétaires',
+        ownerPeriod: (from: string, to: string | null) =>
+            to ? `Du ${from} au ${to}` : `Depuis le ${from}`,
+        current: 'Actuel',
+        nextOilChange: 'Prochaine vidange',
+        nextOilChangeText:
+            'Calculée à partir des vidanges enregistrées dans les prestations.',
+        logbook: 'Carnet d’entretien',
+        logbookText:
+            'Les prestations et les kilométrages relevés apparaîtront ici, de la plus récente à la plus ancienne.',
+        documents: 'Documents',
+        documentsText:
+            'Bilan d’entretien à imprimer ou en PDF (avec ou sans les prix).',
+        deactivateTitle: 'Désactiver ce véhicule ?',
+        deactivateText:
+            'Il n’apparaîtra plus dans les recherches des nouvelles prestations. Son carnet est conservé et vous pourrez le réactiver.',
+    },
+
     user: {
         menu: 'Mon compte',
         profile: 'Profil',

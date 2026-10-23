@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 /**
  * Pièce utilisée. unit_cost : figé à la sortie de stock (stock) ou prix d'achat (external).
@@ -58,15 +57,5 @@ class ServiceOrderPart extends Model
     public function article(): BelongsTo
     {
         return $this->belongsTo(Article::class);
-    }
-
-    /**
-     * Expense of an external part.
-     *
-     * @return MorphOne<Expense, $this>
-     */
-    public function expense(): MorphOne
-    {
-        return $this->morphOne(Expense::class, 'source');
     }
 }

@@ -144,8 +144,7 @@ export const fr = {
             credit: 'Crédit',
         },
         creditTitle: 'Crédit restant',
-        creditText:
-            'Somme des factures non réglées. Les factures arrivent avec la phase des prestations.',
+        creditText: 'Somme des restes à payer des factures de ce client.',
         serviceOrdersEmpty: 'Les prestations de ce client apparaîtront ici.',
         invoicesEmpty: 'Les factures de ce client apparaîtront ici.',
         edit: 'Modifier',
@@ -486,7 +485,7 @@ export const fr = {
         completeShort: 'Terminer',
         completeTitle: 'Terminer la prestation ?',
         completeText:
-            'Les pièces du stock sortent, les pièces achetées à l’extérieur passent en dépense et la prestation ne sera plus modifiable.',
+            'Les pièces du stock sortent, les pièces achetées à l’extérieur passent en dépense et la facture est créée. La prestation ne sera plus modifiable.',
         edit: 'Modifier',
         delete: 'Supprimer',
         deleteTitle: 'Supprimer cette prestation ?',
@@ -498,6 +497,79 @@ export const fr = {
         km: (km: string) => `${km} km`,
         logbookEmpty: 'Aucune prestation pour l’instant.',
         newForVehicle: 'Nouvelle prestation',
+    },
+
+    invoices: {
+        title: 'Factures',
+        description:
+            'Les factures des prestations, leurs paiements et les crédits clients.',
+        tabInvoices: 'Factures',
+        tabCredits: 'Crédits clients',
+        search: 'N°, client, téléphone ou matricule…',
+        allStatuses: 'Tous les états',
+        emptyTitle: 'Aucune facture',
+        emptyText:
+            'Une facture est créée quand une prestation est terminée (« Terminer et facturer »).',
+        columns: {
+            number: 'N°',
+            client: 'Client',
+            vehicle: 'Véhicule',
+            status: 'État',
+            total: 'Total',
+            remaining: 'Reste',
+        },
+        invoice: 'Facture',
+        issuedOn: (date: string) => `Du ${date}`,
+        order: (number: string) => `Prestation ${number}`,
+        laborTotal: 'Main-d’œuvre',
+        partsTotal: 'Pièces',
+        discount: 'Remise',
+        total: 'Total',
+        paid: 'Payé',
+        remaining: 'Reste à payer',
+        pay: 'Encaisser',
+        print: 'Imprimer',
+        printA4: 'Imprimer A4',
+        printTicket: 'Ticket 80 mm',
+        pdf: 'PDF',
+        preview: 'Aperçu de la facture',
+        payments: 'Paiements',
+        paymentsEmpty: 'Aucun paiement pour l’instant.',
+        receipt: 'Reçu',
+        receiptTicket: 'Reçu ticket',
+        proof: 'Preuve',
+        cancelledPayment: 'Annulé',
+        byUser: (name: string) => `par ${name}`,
+        discountTitle: 'Remise',
+        discountText:
+            'Montant retiré du total. Possible tant qu’aucun paiement n’est enregistré.',
+        discountSave: 'Appliquer la remise',
+        cancel: 'Annuler la facture',
+        cancelTitle: 'Annuler cette facture ?',
+        cancelText:
+            'Les paiements sont annulés, les pièces reviennent en stock et la prestation repasse « En cours » pour être corrigée puis refacturée.',
+        cancelledOn: (date: string, name: string) =>
+            `Annulée le ${date} par ${name}`,
+        cancelReason: (reason: string) => `Motif : ${reason}`,
+        credits: {
+            totalLabel: 'Total des crédits',
+            search: 'Nom ou téléphone…',
+            emptyTitle: 'Aucun crédit',
+            emptyText: 'Tous les clients ont réglé leurs factures.',
+            columns: {
+                client: 'Client',
+                phone: 'Téléphone',
+                invoices: 'Factures',
+                since: 'Depuis',
+                credit: 'Crédit',
+            },
+            days: (days: number) =>
+                days === 0
+                    ? 'aujourd’hui'
+                    : days === 1
+                      ? '1 jour'
+                      : `${days} jours`,
+        },
     },
 
     employees: {
@@ -521,6 +593,8 @@ export const fr = {
 
     payment: {
         title: 'Payer le fournisseur',
+        clientTitle: 'Encaisser',
+        clientSubmit: 'Encaisser',
         amount: 'Montant',
         remaining: (amount: string) => `Reste à payer : ${amount}`,
         date: 'Date du paiement',

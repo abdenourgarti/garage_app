@@ -22,6 +22,14 @@ class NumberingService
         return $this->next(self::SERVICE_ORDER, 'PR', $date->year);
     }
 
+    /**
+     * RG-12 : FA-2026-00001, continu par année (une facture annulée garde son numéro).
+     */
+    public function invoice(CarbonInterface $date): string
+    {
+        return $this->next(self::INVOICE, 'FA', $date->year);
+    }
+
     public function next(string $sequence, string $prefix, int $year): string
     {
         return DB::transaction(function () use ($sequence, $prefix, $year) {

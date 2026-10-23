@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { CheckCircle2, Pencil, Phone, Trash2 } from 'lucide-react';
+import { CheckCircle2, FileText, Pencil, Phone, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import ServiceOrderController from '@/actions/App/Http/Controllers/ServiceOrders/ServiceOrderController';
 import { ConfirmDialog } from '@/components/app/confirm-dialog';
@@ -11,8 +11,10 @@ import { formatDate, formatQuantity } from '@/lib/format';
 import { fr } from '@/lib/i18n/fr';
 import { show as showArticle } from '@/routes/articles';
 import { show as showClient } from '@/routes/clients';
+import { show as showInvoice } from '@/routes/invoices';
 import { edit as editOrder } from '@/routes/service-orders';
 import { show as showVehicle } from '@/routes/vehicles';
+import type { InvoiceStatus } from '@/types/invoices';
 
 type Props = {
     order: {
@@ -52,6 +54,12 @@ type Props = {
         parts_total: string;
         total: string;
         can_delete: boolean;
+        invoices: {
+            id: number;
+            number: string;
+            total: string;
+            status: InvoiceStatus;
+        }[];
     };
 };
 
@@ -60,6 +68,12 @@ const t = fr.serviceOrders;
 export default function ServiceOrderShow({ order }: Props) {
     const [confirm, setConfirm] = useState<'complete' | 'delete' | null>(null);
     const inProgress = order.status === 'en_cours';
+    const activeInvoice = order.invoices.find(
+        (invoice) => invoice.status !== 'annulee',
+    );
+    const cancelledInvoices = order.invoices.filter(
+        (invoice) => invoice.status === 'annulee',
+    );
 
     return (
         <>
@@ -87,7 +101,28 @@ export default function ServiceOrderShow({ order }: Props) {
                                 .filter(Boolean)
                                 .join(', ')}
                         </p>
+                        {cancelledInvoices.length > 0 && (
+                            <p className="flex flex-wrap gap-x-3 text-sm text-muted-foreground">
+                                {cancelledInvoices.map((invoice) => (
+                                    <Link
+                                        key={invoice.id}
+                                        href={showInvoice(invoice.id)}
+                                        className="line-through hover:underline"
+                                    >
+                                        {`${fr.invoices.invoice} ${invoice.number}`}
+                                    </Link>
+                                ))}
+                            </p>
+                        )}
                     </div>
+                    {activeInvoice && (
+                        <Button asChild className="h-11">
+                            <Link href={showInvoice(activeInvoice.id)}>
+                                <FileText />
+                                {`${fr.invoices.invoice} ${activeInvoice.number}`}
+                            </Link>
+                        </Button>
+                    )}
                     {inProgress && (
                         <div className="flex flex-wrap gap-2 [&>*]:flex-1 sm:[&>*]:flex-none">
                             <Button

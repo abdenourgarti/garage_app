@@ -146,7 +146,8 @@ test('S3: a part from the client is free, a part bought outside becomes an expen
     expect($expense->amount)->toBe('2200.00')
         ->and($expense->category->system_key)->toBe(SystemExpenseCategory::ExternalParts)
         ->and($expense->payment_method_id)->toBe($this->cash->id)
-        ->and($expense->source->designation)->toBe('Roulement')
+        ->and($expense->source->is($order))->toBeTrue()
+        ->and($expense->label)->toContain('Roulement')
         ->and(StockMovement::where('type', StockMovementType::ServiceOut)->count())->toBe(0);
 });
 

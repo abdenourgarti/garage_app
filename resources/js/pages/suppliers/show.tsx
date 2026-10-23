@@ -245,7 +245,7 @@ export default function SupplierShow({
                 key={openCount}
                 open={paying !== null}
                 onOpenChange={(open) => !open && setPaying(null)}
-                purchase={
+                target={
                     paying
                         ? {
                               id: paying.id,

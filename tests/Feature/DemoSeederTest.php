@@ -1,9 +1,12 @@
 <?php
 
+use App\Enums\InvoiceStatus;
 use App\Enums\ServiceOrderStatus;
 use App\Models\Article;
 use App\Models\Client;
 use App\Models\Expense;
+use App\Models\Invoice;
+use App\Models\Payment;
 use App\Models\Purchase;
 use App\Models\ServiceOrder;
 use App\Models\StockMovement;
@@ -26,10 +29,18 @@ it('fills a coherent demo dataset, only once', function () {
         ->toEqual((float) StockMovement::where('article_id', $article->id)->sum('quantity')));
 
     // Pièce extérieure payée en dépense, kilométrages repris par les véhicules.
-    expect(Expense::where('source_type', 'service_order_part')->exists())->toBeTrue()
+    expect(Expense::where('source_type', 'service_order')->exists())->toBeTrue()
         ->and(Vehicle::whereNull('last_mileage')->exists())->toBeFalse();
 
+    // Factures : une par prestation terminée + une annulée, des crédits, aucun paiement au-delà du total.
+    expect(Invoice::valid()->count())->toBe(24)
+        ->and(Invoice::where('status', InvoiceStatus::Cancelled)->count())->toBe(1)
+        ->and(Invoice::outstanding()->count())->toBeGreaterThan(2)
+        ->and(Invoice::whereColumn('amount_paid', '>', 'total')->exists())->toBeFalse();
+
+    $payments = Payment::count();
     $this->seed(DemoSeeder::class);
 
-    expect(Client::count())->toBe(14)->and(ServiceOrder::count())->toBe(26)->and(Purchase::count())->toBe(6);
+    expect(Client::count())->toBe(14)->and(ServiceOrder::count())->toBe(26)->and(Purchase::count())->toBe(6)
+        ->and(Invoice::count())->toBe(25)->and(Payment::count())->toBe($payments);
 });

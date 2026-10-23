@@ -33,18 +33,25 @@ export type PaymentMethodOption = {
 type Props = {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    purchase: { id: number; remaining: string; label: string } | null;
+    target: { id: number; remaining: string; label: string } | null;
+    /** Adresse d’envoi ; par défaut, le paiement d’un achat. */
+    url?: string;
+    title?: string;
+    submitLabel?: string;
     paymentMethods: PaymentMethodOption[];
     defaultPaymentMethodId: number | null;
 };
 
 const t = fr.payment;
 
-/** Paiement d'un achat (reste dû proposé), avec preuve facultative. Remonté à chaque ouverture (key). */
+/** Paiement (reste dû proposé) d’un achat ou d’une facture, avec preuve facultative. Remonté à chaque ouverture (key). */
 export function PaySupplierSheet({
     open,
     onOpenChange,
-    purchase,
+    target,
+    url,
+    title = t.title,
+    submitLabel = t.submit,
     paymentMethods,
     defaultPaymentMethodId,
 }: Props) {
@@ -55,7 +62,7 @@ export function PaySupplierSheet({
         payment_method_id: string;
         proof: File | null;
     }>({
-        amount: purchase?.remaining ?? '',
+        amount: target?.remaining ?? '',
         paid_at: today,
         payment_method_id: defaultPaymentMethodId
             ? String(defaultPaymentMethodId)
@@ -66,11 +73,11 @@ export function PaySupplierSheet({
     const submit = (event: React.FormEvent) => {
         event.preventDefault();
 
-        if (!purchase) {
+        if (!target) {
             return;
         }
 
-        form.post(PurchasePaymentController.store.url(purchase.id), {
+        form.post(url ?? PurchasePaymentController.store.url(target.id), {
             forceFormData: true,
             preserveScroll: true,
             onSuccess: () => onOpenChange(false),
@@ -82,14 +89,12 @@ export function PaySupplierSheet({
             <SheetContent className="w-full overflow-y-auto sm:max-w-md">
                 <form onSubmit={submit} className="flex min-h-full flex-col">
                     <SheetHeader>
-                        <SheetTitle>{t.title}</SheetTitle>
+                        <SheetTitle>{title}</SheetTitle>
                         <SheetDescription>
-                            {purchase?.label}
-                            {purchase && (
+                            {target?.label}
+                            {target && (
                                 <span className="block">
-                                    {t.remaining(
-                                        formatMoney(purchase.remaining),
-                                    )}
+                                    {t.remaining(formatMoney(target.remaining))}
                                 </span>
                             )}
                         </SheetDescription>
@@ -186,7 +191,7 @@ export function PaySupplierSheet({
                             disabled={form.processing}
                         >
                             {form.processing && <Spinner />}
-                            {t.submit}
+                            {submitLabel}
                         </Button>
                     </SheetFooter>
                 </form>

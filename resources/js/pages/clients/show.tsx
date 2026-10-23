@@ -1,13 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import {
-    Car,
-    FileText,
-    MapPin,
-    Pencil,
-    Phone,
-    Plus,
-    Power,
-} from 'lucide-react';
+import { Car, MapPin, Pencil, Phone, Plus, Power } from 'lucide-react';
 import { useState } from 'react';
 import ClientController from '@/actions/App/Http/Controllers/Clients/ClientController';
 import { ConfirmDialog } from '@/components/app/confirm-dialog';
@@ -16,6 +8,7 @@ import { MoneyText } from '@/components/app/money-text';
 import { Plate } from '@/components/app/plate';
 import { ClientFormSheet } from '@/components/clients/client-form-sheet';
 import { VehicleFormSheet } from '@/components/clients/vehicle-form-sheet';
+import { InvoiceList } from '@/components/invoices/invoice-list';
 import { OrderHistory } from '@/components/service-orders/order-history';
 import type { HistoryRow } from '@/components/service-orders/order-history';
 import { Button } from '@/components/ui/button';
@@ -24,6 +17,7 @@ import { fr } from '@/lib/i18n/fr';
 import { cn } from '@/lib/utils';
 import { show as showVehicle } from '@/routes/vehicles';
 import type { ClientVehicleOptions } from '@/types/clients';
+import type { InvoiceRow } from '@/types/invoices';
 
 type Props = {
     client: {
@@ -47,6 +41,8 @@ type Props = {
         is_active: boolean;
     }[];
     serviceOrders: HistoryRow[];
+    invoices: InvoiceRow[];
+    credit: string;
     options: ClientVehicleOptions;
 };
 
@@ -58,6 +54,8 @@ export default function ClientShow({
     client,
     vehicles,
     serviceOrders,
+    invoices,
+    credit,
     options,
 }: Props) {
     const [tab, setTab] = useState<Tab>('vehicles');
@@ -87,7 +85,7 @@ export default function ClientShow({
             key: 'serviceOrders',
             label: `${t.tabs.serviceOrders} (${serviceOrders.length})`,
         },
-        { key: 'invoices', label: t.tabs.invoices },
+        { key: 'invoices', label: `${t.tabs.invoices} (${invoices.length})` },
         { key: 'credit', label: t.tabs.credit },
     ];
 
@@ -252,24 +250,37 @@ export default function ClientShow({
                         <OrderHistory rows={serviceOrders} showPlate />
                     )}
                     {tab === 'invoices' && (
-                        <EmptyState
-                            icon={FileText}
-                            title={fr.common.comingSoon}
-                            description={t.invoicesEmpty}
+                        <InvoiceList
+                            rows={invoices}
+                            emptyTitle={t.invoicesEmpty}
                         />
                     )}
                     {tab === 'credit' && (
-                        <div className="max-w-sm rounded-xl border bg-card p-4">
-                            <p className="text-sm text-muted-foreground">
-                                {t.creditTitle}
-                            </p>
-                            <MoneyText
-                                value={0}
-                                className="mt-1 block text-2xl"
+                        <div className="space-y-4">
+                            <div className="max-w-sm rounded-xl border bg-card p-4">
+                                <p className="text-sm text-muted-foreground">
+                                    {t.creditTitle}
+                                </p>
+                                <MoneyText
+                                    value={credit}
+                                    className={cn(
+                                        'mt-1 block text-2xl',
+                                        Number(credit) > 0 &&
+                                            'text-destructive',
+                                    )}
+                                />
+                                <p className="mt-2 text-sm text-muted-foreground">
+                                    {t.creditText}
+                                </p>
+                            </div>
+                            <InvoiceList
+                                rows={invoices.filter(
+                                    (invoice) =>
+                                        invoice.status === 'impayee' ||
+                                        invoice.status === 'partielle',
+                                )}
+                                emptyTitle={fr.invoices.credits.emptyTitle}
                             />
-                            <p className="mt-2 text-sm text-muted-foreground">
-                                {t.creditText}
-                            </p>
                         </div>
                     )}
                 </div>

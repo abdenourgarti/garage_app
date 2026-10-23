@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Clients;
 
 use App\Actions\Clients\CreateClientWithVehicle;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Invoices\InvoiceController;
 use App\Http\Controllers\ServiceOrders\ServiceOrderController;
 use App\Http\Requests\Clients\ClientRequest;
 use App\Http\Requests\Clients\QuickClientRequest;
@@ -67,6 +68,8 @@ class ClientController extends Controller
                 'is_active' => $vehicle->is_active,
             ]),
             'serviceOrders' => ServiceOrderController::history(ServiceOrder::where('client_id', $client->id)),
+            'invoices' => InvoiceController::forClient($client),
+            'credit' => $client->credit(),
             'options' => FormOptions::clientVehicle(),
         ]);
     }

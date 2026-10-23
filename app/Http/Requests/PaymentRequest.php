@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Http\Requests\Stock;
+namespace App\Http\Requests;
 
 use App\Support\PrivateFile;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class SupplierPaymentRequest extends FormRequest
+class PaymentRequest extends FormRequest
 {
     /**
      * @return array<string, ValidationRule|array<mixed>|string>

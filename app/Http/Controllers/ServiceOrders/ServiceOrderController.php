@@ -11,6 +11,7 @@ use App\Http\Controllers\Clients\LookupController;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ServiceOrders\ServiceOrderRequest;
 use App\Models\Employee;
+use App\Models\Invoice;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderLine;
 use App\Models\ServiceOrderPart;
@@ -84,7 +85,7 @@ class ServiceOrderController extends Controller
 
     public function show(ServiceOrder $order): Response
     {
-        $order->load(['client:id,first_name,last_name,phone', 'vehicle.brand:id,name', 'vehicle.vehicleModel:id,name', 'lines.serviceType:id,name', 'lines.employee:id,name', 'lines.parts.article:id,stock_unit', 'parts', 'user:id,name']);
+        $order->load(['client:id,first_name,last_name,phone', 'vehicle.brand:id,name', 'vehicle.vehicleModel:id,name', 'lines.serviceType:id,name', 'lines.employee:id,name', 'lines.parts.article:id,stock_unit', 'parts', 'user:id,name', 'invoices']);
 
         return Inertia::render('service-orders/show', [
             'order' => [
@@ -118,7 +119,8 @@ class ServiceOrderController extends Controller
                 'labor_total' => $order->laborTotal(),
                 'parts_total' => $order->partsTotal(),
                 'total' => $order->total(),
-                'can_delete' => $order->isInProgress() && Gate::allows('delete-service-orders'),
+                'can_delete' => $order->isInProgress() && Gate::allows('delete-service-orders') && $order->invoices->isEmpty(),
+                'invoices' => $order->invoices->map(fn (Invoice $invoice) => $invoice->only(['id', 'number', 'total']) + ['status' => $invoice->status->value]),
             ],
         ]);
     }
@@ -177,7 +179,7 @@ class ServiceOrderController extends Controller
 
         $this->flashCompleted($warnings);
 
-        return back();
+        return to_route('invoices.show', $order->invoice()->firstOrFail());
     }
 
     public function destroy(ServiceOrder $order): RedirectResponse
@@ -186,6 +188,10 @@ class ServiceOrderController extends Controller
 
         if (! $order->isInProgress()) {
             throw ValidationException::withMessages(['status' => 'Une prestation terminée ne peut pas être supprimée.']);
+        }
+
+        if ($order->invoices()->exists()) {
+            throw ValidationException::withMessages(['status' => 'Cette prestation a déjà été facturée : corrigez-la puis terminez-la à nouveau.']);
         }
 
         $order->delete();
@@ -210,6 +216,9 @@ class ServiceOrderController extends Controller
             Inertia::flash('toast', ['type' => 'success', 'message' => "Prestation {$order->number} enregistrée."]);
         } else {
             $this->flashCompleted($warnings);
+
+            // « Terminer et facturer » mène à la facture, prête à encaisser.
+            return to_route('invoices.show', $order->invoice()->firstOrFail());
         }
 
         return to_route('service-orders.show', $order);
@@ -221,7 +230,7 @@ class ServiceOrderController extends Controller
     private function flashCompleted(array $warnings): void
     {
         Inertia::flash('toast', $warnings === []
-            ? ['type' => 'success', 'message' => 'Prestation terminée : le stock est à jour.']
+            ? ['type' => 'success', 'message' => 'Prestation terminée et facturée : le stock est à jour.']
             : ['type' => 'warning', 'message' => 'Prestation terminée. Attention : '.implode(' ', $warnings)]);
     }
 

@@ -95,8 +95,8 @@ Reste dû d'un achat = `total − amount_paid` ; dette fournisseur = somme des r
 
 | Table | Colonnes |
 | --- | --- |
-| `invoices` | `number` unique (`FA-2026-00001`), `service_order_id` FK unique, `client_id` FK, `issued_at` date, `labor_total`, `parts_total`, `discount` default 0, `total`, `amount_paid` default 0, `status` enum(`impayee`,`partielle`,`payee`,`annulee`), `cancelled_at` null, `cancel_reason` null, `cancelled_by` FK null |
-| `payments` | `invoice_id` FK, `client_id` FK, `amount`, `payment_method_id` FK, `paid_at` datetime, `cancelled_at` null, `notes` null, `user_id` FK |
+| `invoices` | `number` unique (`FA-2026-00001`), `service_order_id` FK (une seule facture non annulée par prestation, garanti par le code), `client_id` FK, `issued_at` date, `labor_total`, `parts_total`, `discount` default 0, `total`, `amount_paid` default 0, `status` enum(`impayee`,`partielle`,`payee`,`annulee`), `cancelled_at` null, `cancel_reason` null, `cancelled_by` FK null, `user_id` FK |
+| `payments` | `invoice_id` FK, `client_id` FK, `amount`, `payment_method_id` FK, `paid_at` datetime, `proof_path` null (chèque, virement : image ou PDF privé), `cancelled_at` null, `notes` null, `user_id` FK |
 
 Crédit client = somme de (`total − amount_paid`) des factures non annulées du client.
 
@@ -104,7 +104,7 @@ Crédit client = somme de (`total − amount_paid`) des factures non annulées d
 
 | Table | Colonnes |
 | --- | --- |
-| `expenses` | `expense_category_id` FK, `label`, `amount`, `spent_at` date, `payment_method_id` FK null, `employee_id` FK null (ajouté en phase 10 avec `employees`), `source_type`/`source_id` (morph : PurchasePayment, SalaryPayment, ServiceOrderPart) null, `notes` null, `user_id` FK |
+| `expenses` | `expense_category_id` FK, `label`, `amount`, `spent_at` date, `payment_method_id` FK null, `employee_id` FK null (ajouté en phase 10 avec `employees`), `source_type`/`source_id` (morph : PurchasePayment, SalaryPayment, ServiceOrder pour les pièces extérieures) null, `notes` null, `user_id` FK |
 | `other_incomes` | `label`, `amount`, `received_at` date, `payment_method_id` FK null, `notes` null, `user_id` FK |
 | `employees` | `name`, `position` null, `phone` null, `salary_type` enum(`monthly`,`daily`), `salary_amount`, `is_active` |
 | `salary_payments` | `employee_id` FK, `period` char(7) (`2026-10`), `days_worked` smallint null, `base_amount`, `advances_total`, `net_paid`, `paid_at` date, `user_id` FK ; unique(`employee_id`,`period`) |

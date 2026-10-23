@@ -61,6 +61,17 @@ final class Decimal
         return str_replace('.', ',', $value);
     }
 
+    /**
+     * Montant sur un document imprimé, comme formatMoney() à l'écran : « 12 500 DA », « 4 500,50 DA ».
+     */
+    public static function money(string|int|null $value): string
+    {
+        $value = (string) ($value ?? '0');
+        $decimals = str_ends_with(self::add($value), '.00') ? 0 : 2;
+
+        return number_format((float) $value, $decimals, ',', "\u{00A0}")."\u{00A0}DA";
+    }
+
     private static function round(string $value, int $scale): string
     {
         $half = '0.'.str_repeat('0', $scale).'5';

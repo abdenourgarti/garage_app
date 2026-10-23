@@ -3,6 +3,10 @@
 namespace Database\Seeders;
 
 use App\Actions\Clients\CreateClientWithVehicle;
+use App\Actions\Invoices\ApplyDiscount;
+use App\Actions\Invoices\CancelInvoice;
+use App\Actions\Invoices\GenerateInvoice;
+use App\Actions\Invoices\RecordPayment;
 use App\Actions\Purchases\RecordPurchase;
 use App\Actions\ServiceOrders\CompleteServiceOrder;
 use App\Actions\ServiceOrders\SaveServiceOrder;
@@ -11,6 +15,7 @@ use App\Actions\Stock\SaveOilProduct;
 use App\Actions\Vehicles\CreateVehicle;
 use App\Enums\OilUsage;
 use App\Enums\PurchaseStatus;
+use App\Enums\ServiceOrderStatus;
 use App\Enums\StockUnit;
 use App\Enums\UserRole;
 use App\Models\Article;
@@ -19,6 +24,8 @@ use App\Models\Brand;
 use App\Models\Client;
 use App\Models\Employee;
 use App\Models\Energy;
+use App\Models\Invoice;
+use App\Models\Payment;
 use App\Models\PaymentMethod;
 use App\Models\ServiceOrder;
 use App\Models\ServiceType;
@@ -27,6 +34,8 @@ use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleModel;
 use App\Models\Wilaya;
+use App\Support\Decimal;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -59,6 +68,7 @@ class DemoSeeder extends Seeder
             $this->clients();
             $this->employees();
             $this->serviceOrders();
+            $this->invoices();
         } finally {
             Carbon::setTestNow();
         }
@@ -69,7 +79,12 @@ class DemoSeeder extends Seeder
      */
     private function at(int $daysAgo, int $hour, callable $callback): mixed
     {
-        Carbon::setTestNow(today()->subDays($daysAgo)->setTime($hour, 15));
+        return $this->atDate(today()->subDays($daysAgo)->setTime($hour, 15), $callback);
+    }
+
+    private function atDate(CarbonInterface $date, callable $callback): mixed
+    {
+        Carbon::setTestNow($date);
 
         try {
             return $callback();
@@ -312,6 +327,65 @@ class DemoSeeder extends Seeder
         }
 
         $this->command->info("Prestations : {$total} (dont 2 en cours aujourd’hui).");
+    }
+
+    /**
+     * Factures des prestations terminées (créées avant la phase 6 : rattrapées ici), puis encaissements :
+     * la plupart payées le jour même, quelques crédits, une remise, une facture annulée puis refaite.
+     */
+    private function invoices(): void
+    {
+        if (Payment::exists()) {
+            $this->command->line('Paiements déjà présents : rien d’ajouté.');
+
+            return;
+        }
+
+        $generate = app(GenerateInvoice::class);
+        $orders = ServiceOrder::where('status', ServiceOrderStatus::Completed)->orderBy('completed_at')->get();
+
+        foreach ($orders->filter(fn (ServiceOrder $order) => ! $order->invoice()->exists()) as $order) {
+            $this->atDate($order->completed_at, fn () => $generate->handle($order));
+        }
+
+        $pay = app(RecordPayment::class);
+        $methods = PaymentMethod::orderByDesc('is_cash')->orderBy('id')->get()->values();
+        $count = $orders->count();
+
+        foreach ($orders->values() as $index => $order) {
+            $invoice = $order->invoice()->firstOrFail();
+            $method = $index % 7 === 3 ? $methods[min(1, $methods->count() - 1)] : $methods[0];
+            $paidAt = $order->completed_at->addMinutes(20);
+
+            if ($index === 4) {
+                // Facture annulée (erreur de prix), prestation corrigée et refacturée le jour même.
+                $this->atDate($paidAt, function () use ($order, $invoice, $pay, $method) {
+                    $pay->handle($invoice, $invoice->total, now(), $method);
+                    app(CancelInvoice::class)->handle($invoice, 'Erreur sur le prix de la main-d’œuvre');
+                    $order->lines()->first()->update(['labor_price' => '800']);
+                    app(CompleteServiceOrder::class)->handle($order->fresh());
+                    $pay->handle($order->invoice()->firstOrFail(), $order->invoice()->firstOrFail()->total, now(), $method);
+                });
+
+                continue;
+            }
+
+            $this->atDate($paidAt, function () use ($index, $count, $invoice, $pay, $method) {
+                if ($index === 2) {
+                    app(ApplyDiscount::class)->handle($invoice, '500');
+                    $invoice->refresh();
+                }
+
+                match (true) {
+                    $index >= $count - 2 => null, // les deux dernières : pas encore payées
+                    $index % 6 === 5 => $pay->handle($invoice, Decimal::div(Decimal::mul($invoice->total, '6'), '10', 0), now(), $method),
+                    default => $pay->handle($invoice, $invoice->total, now(), $method),
+                };
+            });
+        }
+
+        $credit = Decimal::sub((string) Invoice::outstanding()->sum('total'), (string) Invoice::outstanding()->sum('amount_paid'));
+        $this->command->info('Factures : '.Invoice::count().' (dont 1 annulée), crédits clients : '.Decimal::money($credit).'.');
     }
 
     /**

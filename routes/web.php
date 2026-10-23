@@ -7,6 +7,8 @@ use App\Http\Controllers\Clients\ClientController;
 use App\Http\Controllers\Clients\LookupController;
 use App\Http\Controllers\Clients\VehicleController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\Invoices\InvoiceController;
+use App\Http\Controllers\Invoices\PaymentController;
 use App\Http\Controllers\ServiceOrders\ServiceOrderController;
 use App\Http\Controllers\Stock\ArticleController;
 use App\Http\Controllers\Stock\OilProductController;
@@ -23,7 +25,6 @@ Route::middleware('auth')->group(function () {
 
     // shortcut: pages « Bientôt disponible » le temps que chaque module soit livré (phases 3 à 14).
     Route::inertia('appointments', 'coming-soon', ['title' => 'Rendez-vous'])->name('appointments.index');
-    Route::inertia('invoices', 'coming-soon', ['title' => 'Factures'])->name('invoices.index');
 
     Route::inertia('cash', 'coming-soon', ['title' => 'Caisse'])->middleware('can:manage-cash')->name('cash.index');
     Route::middleware('can:manage-employees')->group(function () {
@@ -42,6 +43,17 @@ Route::middleware('auth')->group(function () {
     Route::put('service-orders/{order}', [ServiceOrderController::class, 'update'])->name('service-orders.update');
     Route::post('service-orders/{order}/complete', [ServiceOrderController::class, 'complete'])->name('service-orders.complete');
     Route::delete('service-orders/{order}', [ServiceOrderController::class, 'destroy'])->name('service-orders.destroy');
+
+    // Factures et paiements (gérant et employé ; annulation : gérant).
+    Route::get('invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+    Route::get('invoices/credits', [InvoiceController::class, 'credits'])->name('invoices.credits');
+    Route::get('invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
+    Route::patch('invoices/{invoice}/discount', [InvoiceController::class, 'discount'])->name('invoices.discount');
+    Route::post('invoices/{invoice}/cancel', [InvoiceController::class, 'cancel'])->name('invoices.cancel');
+    Route::get('invoices/{invoice}/document/{format}', [InvoiceController::class, 'document'])->whereIn('format', ['a4', 'ticket', 'pdf'])->name('invoices.document');
+    Route::post('invoices/{invoice}/payments', [PaymentController::class, 'store'])->name('invoices.payments.store');
+    Route::get('payments/{payment}/proof', [PaymentController::class, 'proof'])->name('payments.proof');
+    Route::get('payments/{payment}/receipt/{format}', [PaymentController::class, 'receipt'])->whereIn('format', ['a4', 'ticket', 'pdf'])->name('payments.receipt');
 
     // Clients et véhicules (gérant et employé).
     Route::get('clients', [ClientController::class, 'index'])->name('clients.index');

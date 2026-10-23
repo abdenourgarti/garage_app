@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -102,6 +104,36 @@ class ServiceOrder extends Model
     public function parts(): HasMany
     {
         return $this->hasMany(ServiceOrderPart::class);
+    }
+
+    /**
+     * Toutes les factures, annulées comprises (la plus récente d'abord).
+     *
+     * @return HasMany<Invoice, $this>
+     */
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class)->latest('id');
+    }
+
+    /**
+     * La facture en vigueur : au plus une non annulée par prestation.
+     *
+     * @return HasOne<Invoice, $this>
+     */
+    public function invoice(): HasOne
+    {
+        return $this->hasOne(Invoice::class)->valid();
+    }
+
+    /**
+     * Dépenses des pièces achetées à l'extérieur.
+     *
+     * @return MorphMany<Expense, $this>
+     */
+    public function expenses(): MorphMany
+    {
+        return $this->morphMany(Expense::class, 'source');
     }
 
     /**

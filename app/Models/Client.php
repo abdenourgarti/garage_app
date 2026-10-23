@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\Referential;
+use App\Support\Decimal;
 use App\Support\Normalize;
 use Database\Factories\ClientFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -117,5 +118,24 @@ class Client extends Model
     public function ownerships(): HasMany
     {
         return $this->hasMany(VehicleOwnership::class);
+    }
+
+    /**
+     * @return HasMany<Invoice, $this>
+     */
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
+    /**
+     * RG-13 : crédit = somme des restes à payer des factures non annulées.
+     */
+    public function credit(): string
+    {
+        return Decimal::sub(
+            (string) $this->invoices()->outstanding()->sum('total'),
+            (string) $this->invoices()->outstanding()->sum('amount_paid'),
+        );
     }
 }

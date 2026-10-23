@@ -2,6 +2,7 @@
 
 namespace App\Actions\ServiceOrders;
 
+use App\Actions\Invoices\GenerateInvoice;
 use App\Enums\PartOrigin;
 use App\Enums\ServiceOrderStatus;
 use App\Enums\StockMovementType;
@@ -17,12 +18,15 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * « Terminer » : contrôles RG-06 / RG-07, sorties de stock à coût figé (RG-08), dépenses des pièces
- * achetées à l'extérieur, dernier kilométrage du véhicule, statut Terminée.
+ * achetées à l'extérieur, dernier kilométrage du véhicule, statut Terminée, facture (GenerateInvoice).
  * Les alertes (stock insuffisant RG-11, kilométrage plus bas RG-06) ne bloquent pas : elles sont renvoyées.
  */
 class CompleteServiceOrder
 {
-    public function __construct(private StockService $stock) {}
+    public function __construct(
+        private StockService $stock,
+        private GenerateInvoice $generateInvoice,
+    ) {}
 
     /**
      * @return list<string> non-blocking warnings
@@ -41,8 +45,6 @@ class CompleteServiceOrder
                 $warnings[] = 'Kilométrage inférieur au dernier relevé ('.number_format($vehicle->last_mileage, 0, ',', ' ').' km) : le dernier relevé est conservé.';
             }
 
-            $cash = PaymentMethod::active()->where('is_cash', true)->first();
-
             foreach ($order->parts as $part) {
                 if ($part->origin === PartOrigin::Stock) {
                     $article = $part->article;
@@ -54,18 +56,9 @@ class CompleteServiceOrder
                     $this->stock->out($article, $part->quantity, StockMovementType::ServiceOut, $article->purchase_price, $order);
                     $part->update(['unit_cost' => $article->purchase_price]);
                 }
-
-                if ($part->origin === PartOrigin::External && Decimal::cmp((string) $part->unit_cost, 0) > 0) {
-                    $part->expense()->create([
-                        'expense_category_id' => ExpenseCategory::system(SystemExpenseCategory::ExternalParts)->id,
-                        'label' => "Pièce extérieure : {$part->designation} ({$order->number})",
-                        'amount' => Decimal::mul($part->quantity, $part->unit_cost),
-                        'spent_at' => today(),
-                        'payment_method_id' => $cash?->id,
-                        'user_id' => Auth::id(),
-                    ]);
-                }
             }
+
+            $this->recordExternalPartsExpense($order);
 
             // Une faute de frappe plus basse ne doit pas fausser les rappels de vidange.
             if ($order->mileage !== null && ($vehicle->last_mileage === null || $order->mileage > $vehicle->last_mileage)) {
@@ -76,10 +69,34 @@ class CompleteServiceOrder
             $order->completed_at = now();
             $order->save();
 
-            // Phase 6 : la facture sera générée ici (GenerateInvoice), dans la même transaction.
+            $this->generateInvoice->handle($order);
 
             return $warnings;
         });
+    }
+
+    /**
+     * Une seule dépense « Pièces extérieures » pour ce qui n'a pas encore été dépensé sur cette prestation :
+     * après une annulation de facture, la pompe à eau déjà payée n'est pas comptée deux fois.
+     */
+    private function recordExternalPartsExpense(ServiceOrder $order): void
+    {
+        $external = $order->parts->where('origin', PartOrigin::External)->filter(fn ($part) => Decimal::cmp((string) $part->unit_cost, 0) > 0);
+        $cost = Decimal::add(...$external->map(fn ($part) => Decimal::mul($part->quantity, $part->unit_cost))->all());
+        $missing = Decimal::sub($cost, (string) $order->expenses()->sum('amount'));
+
+        if (Decimal::cmp($missing, 0) <= 0) {
+            return;
+        }
+
+        $order->expenses()->create([
+            'expense_category_id' => ExpenseCategory::system(SystemExpenseCategory::ExternalParts)->id,
+            'label' => 'Pièces extérieures : '.$external->pluck('designation')->implode(', ')." ({$order->number})",
+            'amount' => $missing,
+            'spent_at' => today(),
+            'payment_method_id' => PaymentMethod::active()->where('is_cash', true)->value('id'),
+            'user_id' => Auth::id(),
+        ]);
     }
 
     private function ensureCompletable(ServiceOrder $order): void

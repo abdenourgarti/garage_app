@@ -42,7 +42,7 @@ app/
   Enums/
   Http/Controllers/{...}/  Http/Requests/{...}/
   Models/  Policies/  Services/
-database/migrations/  database/seeders/ (ReferenceDataSeeder, DemoDataSeeder)
+database/migrations/  database/seeders/ (ReferenceDataSeeder, DemoSeeder)
 resources/js/
   pages/{dashboard,clients,vehicles,service-orders,invoices,stock,purchases,cash,employees,appointments,search,settings,auth}/
   components/ui/          ← shadcn/ui (généré)
@@ -110,8 +110,9 @@ et le menu React masque les entrées non autorisées (prop partagée `auth.can`)
 | `AdjustStock` | Mouvement `adjustment` (écart entre le stock compté et le stock enregistré) signé + motif obligatoire |
 | `OpenOilCan` | Bidon −1 (mouvement `can_opened_out`) ; vrac + `volume_l` (mouvement `can_opened_in`) ; refuse si le format n'a pas de vrac lié |
 | `SaveServiceOrder` | Création et modification : en-tête + lignes + pièces (recréées) ; numéro attribué à la création ; modifiable tant que `en_cours`. « Terminer et facturer » = `SaveServiceOrder` puis `CompleteServiceOrder` dans la même transaction |
-| `CompleteServiceOrder` | Contrôles RG-06/07 ; sorties de stock des pièces `stock` (coût figé = prix d'achat courant) ; `Expense` pour chaque pièce `externe` ; met à jour `vehicles.last_mileage` ; statut `terminee` ; crée la facture via `GenerateInvoice` |
-| `GenerateInvoice` | Calcule sous-totaux MO / pièces, remise, total ; numéro `FA-…` ; statut `impayee` |
+| `CompleteServiceOrder` | Contrôles RG-06/07 ; sorties de stock des pièces `stock` (coût figé = prix d'achat courant) ; `Expense` « Pièces extérieures » rattachée à la prestation pour ce qui n'est pas déjà dépensé ; met à jour `vehicles.last_mileage` ; statut `terminee` ; crée la facture via `GenerateInvoice` |
+| `GenerateInvoice` | Calcule sous-totaux MO / pièces, total ; numéro `FA-…` ; statut `impayee` ; refuse une 2e facture active |
+| `ApplyDiscount` | Remise globale en DA, entre 0 et le sous-total, tant qu'aucun paiement n'est enregistré |
 | `RecordPayment` | `Payment` ; recalcule `amount_paid` et statut (`impayee` / `partielle` / `payee`) ; refuse un montant > reste à payer |
 | `CancelInvoice` (gérant) | Motif obligatoire ; paiements marqués annulés ; facture `annulee` ; prestation repasse `en_cours` ; pièces stock réintégrées (mouvement `cancellation_in`) ; dépenses des pièces externes conservées |
 | `RecordExpense` / `RecordOtherIncome` | Écriture simple datée |
@@ -120,8 +121,9 @@ et le menu React masque les entrées non autorisées (prop partagée `auth.can`)
 | `StartAppointment` | Crée la prestation pré-remplie, lie `appointments.service_order_id`, statut `effectue` |
 | `RunBackup` / `RestoreBackup` | Voir `06-deploiement-windows.md` |
 
-> **Décision de conception à confirmer avec le client** : l'annulation d'une facture remet la prestation « En cours »
-> et réintègre les pièces au stock, pour permettre une correction puis une nouvelle facture.
+> **Décision validée (phase 6)** : l'annulation d'une facture remet la prestation « En cours »
+> et réintègre les pièces au stock, pour permettre une correction puis une nouvelle facture (nouveau numéro).
+> Les dépenses des pièces extérieures sont rattachées à la prestation : à la nouvelle facturation, seule la différence est dépensée.
 
 ## 7. Caisse et bénéfice (RG-14)
 
@@ -148,8 +150,10 @@ et le menu React masque les entrées non autorisées (prop partagée `auth.can`)
 
 ## 10. Impression et PDF
 
-- Pages d'impression Inertia dédiées (`PrintLayout`) + `window.print()` avec CSS `@page` (A4) et une variante ticket 80 mm.
-- Export PDF : `barryvdh/laravel-dompdf` avec vues Blade `resources/views/pdf/*` ; polices embarquées localement.
+- **Une seule mise en page par document** : vues Blade `resources/views/documents/*` (gabarit `layout.blade.php`), servies en
+  trois formats par la même route : `a4` et `ticket` (HTML, `@page` A4 ou 80 mm, `?print=1` lance `window.print()`) et `pdf`
+  (`barryvdh/laravel-dompdf`, A4). L'aperçu de la fiche facture est ce même document dans un cadre : écran, impression et PDF ne divergent pas.
+- Polices : DejaVu Sans fournie avec dompdf (aucun téléchargement, sous-ensemble intégré au PDF) ; Arial à l'impression navigateur. Logo en data URI.
 - Documents : facture A4, ticket 80 mm, reçu de paiement, bilan d'entretien (avec ou sans prix).
 
 ## 11. Sécurité
@@ -170,4 +174,6 @@ et le menu React masque les entrées non autorisées (prop partagée `auth.can`)
 
 - `ReferenceDataSeeder` (toujours) : wilayas, énergies, marques et modèles courants en Algérie, types de prestations,
   catégories (dont catégories système de dépenses), modes de paiement, compte gérant initial.
-- `DemoDataSeeder` (dev uniquement) : 30 clients, 50 véhicules, 200 prestations sur 12 mois, achats, dépenses, salaires.
+- `DemoSeeder` (dev uniquement, `php artisan db:seed --class=DemoSeeder`) : passe par les actions métier ; chaque partie ne s'ajoute
+  qu'une fois, on le relance après chaque phase. À ce jour : 14 clients, 16 véhicules, 26 prestations sur 3 mois, stock, achats,
+  factures et paiements (crédits, remise, annulation). À étoffer (12 mois) pour le tableau de bord.

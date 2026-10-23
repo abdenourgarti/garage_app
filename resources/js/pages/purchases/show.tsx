@@ -302,7 +302,7 @@ export default function PurchaseShow({
                 key={openCount}
                 open={paying}
                 onOpenChange={setPaying}
-                purchase={{
+                target={{
                     id: purchase.id,
                     remaining: purchase.remaining,
                     label: `${t.number(purchase.id)}, ${purchase.supplier.name}`,

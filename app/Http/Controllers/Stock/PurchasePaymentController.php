@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Stock;
 
 use App\Actions\Purchases\PaySupplier;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Stock\SupplierPaymentRequest;
+use App\Http\Requests\PaymentRequest;
 use App\Models\PaymentMethod;
 use App\Models\Purchase;
 use App\Models\PurchasePayment;
@@ -16,7 +16,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PurchasePaymentController extends Controller
 {
-    public function store(SupplierPaymentRequest $request, Purchase $purchase, PaySupplier $action): RedirectResponse
+    public function store(PaymentRequest $request, Purchase $purchase, PaySupplier $action): RedirectResponse
     {
         $action->handle(
             $purchase,

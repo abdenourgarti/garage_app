@@ -10,7 +10,7 @@
 | 3 — Clients et véhicules | ✅ Terminé | 22/10/2026 | Listes Clients et Véhicules (recherche téléphone / nom / prénom / matricule / châssis, filtres wilaya et marque, cartes sur mobile), fiche client (onglets), fiche véhicule (plaque, infos, propriétaire, historique, emplacements carnet / vidange / documents). Actions `CreateVehicle`, `CreateClientWithVehicle`, `TransferVehicleOwnership` ; création rapide réutilisable (JSON) ; recherches JSON pour les sélecteurs. 90 tests Pest + parcours navigateur complet. |
 | 4 — Stock, huiles, achats | ✅ Terminé | 22/10/2026 | Articles et huiles (fiche + formats bidon 5/4/1 L et vrac, chacun avec ses prix et son stock), `StockService` (stock = somme des mouvements), ouvrir un bidon, correction par stock compté, achats Brouillon → Commandée → Reçue / Annulée, paiements fournisseurs (dépense « Achats pièces ») avec preuve et facture jointes, fiches fournisseur (reste dû). Tests sur MariaDB : 111 Pest + 13 JS, parcours navigateur complet. |
 | 5 — Prestations | ✅ Terminé | 23/10/2026 | Écran « Nouvelle prestation » en sections (véhicule + création rapide, km, date, immobilisation, types fréquents en boutons, mécanicien par ligne, pièces Stock / Huile / Client / Extérieur, récapitulatif collant), numérotation PR-AAAA-00001 verrouillée, `SaveServiceOrder` + `CompleteServiceOrder` (sorties de stock à coût figé, dépense pièces extérieures, dernier km), liste filtrée, fiche, carnet sur la fiche véhicule et onglet client, mécaniciens (CRUD minimal). 132 Pest + 13 JS ; S1 = 20 clics, 8 champs. |
-| 6 — Factures et paiements | ⬜ À faire | | |
+| 6 — Factures et paiements | ✅ Terminé | 23/10/2026 | « Terminer et facturer » crée la facture FA-AAAA-00001 et mène à sa fiche (aperçu fidèle, Encaisser avec reste proposé, remise avant paiement, annulation gérant avec motif). Paiements partiels, crédit client (fiche client + liste « Crédits clients » par ancienneté). Facture et reçu en A4, ticket 80 mm et PDF (dompdf). Données de démonstration (`DemoSeeder`). 141 Pest + 13 JS, parcours navigateur complet. |
 | 7 — Recherche et historique | ⬜ À faire | | |
 | 8 — Utilisateurs, sauvegardes, licence | ⬜ À faire | | |
 | 9 — Packaging Windows | ⬜ À faire | | |
@@ -62,6 +62,13 @@
 - **Phase 5** — Pièce « achetée à l’extérieur » : dépense « Pièces extérieures » en Espèces à la date du jour. Pièce « apportée par le client » : prix 0, hors total. Huile : choix de l’huile puis du format ; en vrac, quantité = capacité d’huile du modèle.
 - **Phase 5** — Un numéro PR supprimé laisse un trou (accepté) ; les factures (phase 6) resteront continues. Numérotation testée sous concurrence réelle (deux connexions MariaDB, verrou `lockForUpdate`).
 - **Phase 5** — Table `employees` créée dès maintenant (colonnes salaire comprises) avec un CRUD minimal réservé au gérant ; les paies restent en phase 10. La facture sera générée dans `CompleteServiceOrder` en phase 6.
+
+- **Démo** — `DemoSeeder` (demande du client) : données d’exemple passant par les actions métier, relançable après chaque phase (chaque partie ne s’ajoute qu’une fois). Jamais en production ; l’installation chez le garage part d’une base vide.
+- **Phase 6** — Une seule mise en page par document (Blade `documents/*`) pour l’impression A4, le ticket 80 mm, le PDF et l’aperçu de la fiche, au lieu d’un `PrintLayout` React + des vues PDF séparées. PDF en DejaVu Sans (fournie avec dompdf, sous-ensemble intégré : ~50 Ko) ; Arial à l’impression navigateur.
+- **Phase 6** — Annulation (décision validée) : paiements annulés, pièces réintégrées au coût de sortie, prestation En cours, facture barrée conservée ; la nouvelle facture prend un nouveau numéro (`invoices.service_order_id` non unique, une seule facture active). Une prestation déjà facturée ne se supprime plus.
+- **Phase 6** — Dépense des pièces extérieures rattachée à la prestation (plus à la pièce) : à la refacturation, seule la différence est dépensée. Migration de conversion des dépenses existantes.
+- **Phase 6** — Remise en DA seulement (pas de pourcentage) ; pas d’annulation d’un paiement seul (on annule la facture). Preuve de paiement facultative (chèque, virement). « Encaisser » propose le reste à payer, Espèces par défaut.
+- **Phase 6** — Limite connue : le document d’une facture annulée relit les lignes de la prestation ; si elle est corrigée ensuite, ses lignes changent (totaux d’origine conservés).
 
 ## Points ouverts
 

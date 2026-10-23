@@ -7,6 +7,7 @@ use Database\Factories\ServiceTypeFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property string $name
@@ -32,5 +33,13 @@ class ServiceType extends Model
             'reminder_km' => 'integer',
             'is_active' => 'boolean',
         ];
+    }
+
+    /**
+     * @return HasMany<ServiceOrderLine, $this>
+     */
+    public function lines(): HasMany
+    {
+        return $this->hasMany(ServiceOrderLine::class);
     }
 }

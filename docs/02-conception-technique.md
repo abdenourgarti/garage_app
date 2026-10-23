@@ -109,7 +109,7 @@ et le menu React masque les entrées non autorisées (prop partagée `auth.can`)
 | `PaySupplier` | `PurchasePayment` + `Expense` sur un achat ayant un reste dû |
 | `AdjustStock` | Mouvement `adjustment` (écart entre le stock compté et le stock enregistré) signé + motif obligatoire |
 | `OpenOilCan` | Bidon −1 (mouvement `can_opened_out`) ; vrac + `volume_l` (mouvement `can_opened_in`) ; refuse si le format n'a pas de vrac lié |
-| `CreateServiceOrder` / `UpdateServiceOrder` | En-tête + lignes + pièces ; numéro attribué à la création ; modifiable tant que `en_cours` |
+| `SaveServiceOrder` | Création et modification : en-tête + lignes + pièces (recréées) ; numéro attribué à la création ; modifiable tant que `en_cours`. « Terminer et facturer » = `SaveServiceOrder` puis `CompleteServiceOrder` dans la même transaction |
 | `CompleteServiceOrder` | Contrôles RG-06/07 ; sorties de stock des pièces `stock` (coût figé = prix d'achat courant) ; `Expense` pour chaque pièce `externe` ; met à jour `vehicles.last_mileage` ; statut `terminee` ; crée la facture via `GenerateInvoice` |
 | `GenerateInvoice` | Calcule sous-totaux MO / pièces, remise, total ; numéro `FA-…` ; statut `impayee` |
 | `RecordPayment` | `Payment` ; recalcule `amount_paid` et statut (`impayee` / `partielle` / `payee`) ; refuse un montant > reste à payer |

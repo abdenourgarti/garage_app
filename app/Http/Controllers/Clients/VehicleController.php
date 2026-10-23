@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Clients;
 use App\Actions\Vehicles\CreateVehicle;
 use App\Actions\Vehicles\TransferVehicleOwnership;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\ServiceOrders\ServiceOrderController;
 use App\Http\Requests\Clients\TransferVehicleRequest;
 use App\Http\Requests\Clients\VehicleRequest;
 use App\Models\Brand;
 use App\Models\Client;
+use App\Models\ServiceOrder;
 use App\Models\Vehicle;
 use App\Models\VehicleOwnership;
 use App\Support\FormOptions;
@@ -72,6 +74,7 @@ class VehicleController extends Controller
                     'ended_at' => $ownership->ended_at?->toDateString(),
                 ]),
             ],
+            'serviceOrders' => ServiceOrderController::history(ServiceOrder::where('vehicle_id', $vehicle->id)),
             'options' => FormOptions::clientVehicle(),
         ]);
     }

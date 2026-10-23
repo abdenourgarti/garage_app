@@ -1,24 +1,26 @@
 import { Head, Link, router } from '@inertiajs/react';
 import {
     ArrowLeftRight,
-    BookOpen,
     Droplets,
     FileText,
     Pencil,
     Phone,
+    Plus,
     Power,
 } from 'lucide-react';
 import { useState } from 'react';
 import VehicleController from '@/actions/App/Http/Controllers/Clients/VehicleController';
 import { ConfirmDialog } from '@/components/app/confirm-dialog';
-import { EmptyState } from '@/components/app/empty-state';
 import { Plate } from '@/components/app/plate';
 import { TransferSheet } from '@/components/clients/transfer-sheet';
 import { VehicleFormSheet } from '@/components/clients/vehicle-form-sheet';
+import { OrderHistory } from '@/components/service-orders/order-history';
+import type { HistoryRow } from '@/components/service-orders/order-history';
 import { Button } from '@/components/ui/button';
 import { formatDate, formatQuantity } from '@/lib/format';
 import { fr } from '@/lib/i18n/fr';
 import { show as showClient } from '@/routes/clients';
+import { create as createOrder } from '@/routes/service-orders';
 import type { ClientVehicleOptions } from '@/types/clients';
 
 type Person = { id: number; full_name: string; phone: string };
@@ -47,6 +49,7 @@ type Props = {
             ended_at: string | null;
         }[];
     };
+    serviceOrders: HistoryRow[];
     options: ClientVehicleOptions;
 };
 
@@ -82,7 +85,11 @@ function Section({
     );
 }
 
-export default function VehicleShow({ vehicle, options }: Props) {
+export default function VehicleShow({
+    vehicle,
+    serviceOrders,
+    options,
+}: Props) {
     const [editing, setEditing] = useState(false);
     const [transferring, setTransferring] = useState(false);
     const [confirmToggle, setConfirmToggle] = useState(false);
@@ -125,6 +132,22 @@ export default function VehicleShow({ vehicle, options }: Props) {
                         </h1>
                     </div>
                     <div className="flex flex-wrap gap-2 [&>*]:flex-1 sm:[&>*]:flex-none">
+                        {vehicle.is_active && (
+                            <Button
+                                asChild
+                                variant="highlight"
+                                className="h-11"
+                            >
+                                <Link
+                                    href={createOrder({
+                                        query: { vehicle: vehicle.id },
+                                    })}
+                                >
+                                    <Plus />
+                                    {fr.serviceOrders.newForVehicle}
+                                </Link>
+                            </Button>
+                        )}
                         <Button
                             variant="outline"
                             className="h-11"
@@ -194,11 +217,7 @@ export default function VehicleShow({ vehicle, options }: Props) {
                         </Section>
 
                         <Section title={t.logbook}>
-                            <EmptyState
-                                icon={BookOpen}
-                                title={fr.common.comingSoon}
-                                description={t.logbookText}
-                            />
+                            <OrderHistory rows={serviceOrders} />
                         </Section>
                     </div>
 

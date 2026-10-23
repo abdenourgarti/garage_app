@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Clients;
 
+use App\Enums\OilFormat;
 use App\Http\Controllers\Controller;
 use App\Models\Article;
 use App\Models\Client;
+use App\Models\OilProduct;
 use App\Models\Vehicle;
 use App\Support\Decimal;
 use App\Support\Normalize;
@@ -102,6 +104,85 @@ class LookupController extends Controller
             'sale_price' => $article->sale_price,
             'stock_qty' => $article->stock_qty,
         ]));
+    }
+
+    /**
+     * Écran prestation : un véhicule par matricule, ou par téléphone / nom de son propriétaire.
+     */
+    public function serviceVehicles(Request $request): JsonResponse
+    {
+        $term = trim($request->string('q')->toString());
+
+        if (mb_strlen($term) < 2) {
+            return response()->json([]);
+        }
+
+        $vehicles = Vehicle::active()
+            ->with(['brand:id,name', 'vehicleModel:id,name,oil_capacity_l', 'client:id,first_name,last_name,phone'])
+            ->search($term)
+            ->orderBy('plate_normalized')
+            ->limit(self::LIMIT)
+            ->get();
+
+        return response()->json($vehicles->map(fn (Vehicle $vehicle) => self::serviceVehicleOption($vehicle)));
+    }
+
+    /**
+     * Huiles actives avec leurs formats actifs (choisir l'huile, puis bidon ou vrac).
+     */
+    public function oils(Request $request): JsonResponse
+    {
+        $term = trim($request->string('q')->toString());
+
+        $oils = OilProduct::active()
+            ->with(['articles' => fn ($query) => $query->active()])
+            ->whereHas('articles', fn ($query) => $query->active())
+            ->where(function ($query) use ($term) {
+                foreach (preg_split('/\s+/', $term, -1, PREG_SPLIT_NO_EMPTY) as $word) {
+                    $query->where(fn ($query) => $query
+                        ->where('brand', 'like', "%{$word}%")
+                        ->orWhere('name', 'like', "%{$word}%")
+                        ->orWhere('viscosity', 'like', "%{$word}%"));
+                }
+            })
+            ->orderBy('brand')
+            ->limit(self::LIMIT)
+            ->get();
+
+        return response()->json($oils->map(fn (OilProduct $oil) => [
+            'value' => (string) $oil->id,
+            'label' => $oil->label(),
+            'description' => $oil->usage->label(),
+            'formats' => $oil->articles->sortBy(fn (Article $format) => array_search($format->oil_format, OilFormat::cases(), true))->values()->map(fn (Article $format) => [
+                'article_id' => (string) $format->id,
+                'label' => $format->name,
+                'format' => $format->oil_format->value,
+                'format_label' => $format->oil_format->label(),
+                'unit' => $format->stock_unit->symbol(),
+                'stock_qty' => $format->stock_qty,
+                'sale_price' => $format->sale_price,
+            ]),
+        ]));
+    }
+
+    /**
+     * Véhicule tel que l'écran prestation l'utilise (propriétaire, dernier km, capacité d'huile).
+     *
+     * @return array<string, mixed>
+     */
+    public static function serviceVehicleOption(Vehicle $vehicle): array
+    {
+        $vehicle->loadMissing(['brand:id,name', 'vehicleModel:id,name,oil_capacity_l', 'client:id,first_name,last_name,phone']);
+
+        return [
+            'value' => (string) $vehicle->id,
+            'label' => $vehicle->plate,
+            'description' => trim($vehicle->label().' '.$vehicle->year).', '.$vehicle->client->full_name.', '.$vehicle->client->phone,
+            'vehicle_label' => trim($vehicle->label().' '.$vehicle->year),
+            'client' => $vehicle->client->only(['id', 'full_name', 'phone']),
+            'last_mileage' => $vehicle->last_mileage,
+            'oil_capacity_l' => $vehicle->vehicleModel?->oil_capacity_l,
+        ];
     }
 
     /**

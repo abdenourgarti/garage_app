@@ -7,7 +7,6 @@ import {
     Phone,
     Plus,
     Power,
-    Wrench,
 } from 'lucide-react';
 import { useState } from 'react';
 import ClientController from '@/actions/App/Http/Controllers/Clients/ClientController';
@@ -17,6 +16,8 @@ import { MoneyText } from '@/components/app/money-text';
 import { Plate } from '@/components/app/plate';
 import { ClientFormSheet } from '@/components/clients/client-form-sheet';
 import { VehicleFormSheet } from '@/components/clients/vehicle-form-sheet';
+import { OrderHistory } from '@/components/service-orders/order-history';
+import type { HistoryRow } from '@/components/service-orders/order-history';
 import { Button } from '@/components/ui/button';
 import { formatDate, formatQuantity } from '@/lib/format';
 import { fr } from '@/lib/i18n/fr';
@@ -45,6 +46,7 @@ type Props = {
         last_mileage: number | null;
         is_active: boolean;
     }[];
+    serviceOrders: HistoryRow[];
     options: ClientVehicleOptions;
 };
 
@@ -52,7 +54,12 @@ type Tab = 'vehicles' | 'serviceOrders' | 'invoices' | 'credit';
 
 const t = fr.clients;
 
-export default function ClientShow({ client, vehicles, options }: Props) {
+export default function ClientShow({
+    client,
+    vehicles,
+    serviceOrders,
+    options,
+}: Props) {
     const [tab, setTab] = useState<Tab>('vehicles');
     const [editing, setEditing] = useState(false);
     const [addingVehicle, setAddingVehicle] = useState(false);
@@ -76,7 +83,10 @@ export default function ClientShow({ client, vehicles, options }: Props) {
 
     const tabs: { key: Tab; label: string }[] = [
         { key: 'vehicles', label: `${t.tabs.vehicles} (${vehicles.length})` },
-        { key: 'serviceOrders', label: t.tabs.serviceOrders },
+        {
+            key: 'serviceOrders',
+            label: `${t.tabs.serviceOrders} (${serviceOrders.length})`,
+        },
         { key: 'invoices', label: t.tabs.invoices },
         { key: 'credit', label: t.tabs.credit },
     ];
@@ -239,11 +249,7 @@ export default function ClientShow({ client, vehicles, options }: Props) {
                         </div>
                     )}
                     {tab === 'serviceOrders' && (
-                        <EmptyState
-                            icon={Wrench}
-                            title={fr.common.comingSoon}
-                            description={t.serviceOrdersEmpty}
-                        />
+                        <OrderHistory rows={serviceOrders} showPlate />
                     )}
                     {tab === 'invoices' && (
                         <EmptyState

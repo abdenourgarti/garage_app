@@ -1,0 +1,112 @@
+<?php
+
+namespace App\Actions\ServiceOrders;
+
+use App\Enums\PartOrigin;
+use App\Enums\ServiceOrderStatus;
+use App\Enums\StockMovementType;
+use App\Enums\SystemExpenseCategory;
+use App\Models\ExpenseCategory;
+use App\Models\PaymentMethod;
+use App\Models\ServiceOrder;
+use App\Services\StockService;
+use App\Support\Decimal;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+
+/**
+ * « Terminer » : contrôles RG-06 / RG-07, sorties de stock à coût figé (RG-08), dépenses des pièces
+ * achetées à l'extérieur, dernier kilométrage du véhicule, statut Terminée.
+ * Les alertes (stock insuffisant RG-11, kilométrage plus bas RG-06) ne bloquent pas : elles sont renvoyées.
+ */
+class CompleteServiceOrder
+{
+    public function __construct(private StockService $stock) {}
+
+    /**
+     * @return list<string> non-blocking warnings
+     */
+    public function handle(ServiceOrder $order): array
+    {
+        return DB::transaction(function () use ($order) {
+            $order = ServiceOrder::with(['lines.serviceType', 'parts.article', 'vehicle'])->whereKey($order->id)->lockForUpdate()->firstOrFail();
+
+            $this->ensureCompletable($order);
+
+            $warnings = [];
+            $vehicle = $order->vehicle;
+
+            if ($order->mileage !== null && $vehicle->last_mileage !== null && $order->mileage < $vehicle->last_mileage) {
+                $warnings[] = 'Kilométrage inférieur au dernier relevé ('.number_format($vehicle->last_mileage, 0, ',', ' ').' km) : le dernier relevé est conservé.';
+            }
+
+            $cash = PaymentMethod::active()->where('is_cash', true)->first();
+
+            foreach ($order->parts as $part) {
+                if ($part->origin === PartOrigin::Stock) {
+                    $article = $part->article;
+
+                    if (Decimal::cmp($article->fresh()->stock_qty, $part->quantity) < 0) {
+                        $warnings[] = "Stock insuffisant pour {$article->name} : vérifiez le stock et faites une correction si besoin.";
+                    }
+
+                    $this->stock->out($article, $part->quantity, StockMovementType::ServiceOut, $article->purchase_price, $order);
+                    $part->update(['unit_cost' => $article->purchase_price]);
+                }
+
+                if ($part->origin === PartOrigin::External && Decimal::cmp((string) $part->unit_cost, 0) > 0) {
+                    $part->expense()->create([
+                        'expense_category_id' => ExpenseCategory::system(SystemExpenseCategory::ExternalParts)->id,
+                        'label' => "Pièce extérieure : {$part->designation} ({$order->number})",
+                        'amount' => Decimal::mul($part->quantity, $part->unit_cost),
+                        'spent_at' => today(),
+                        'payment_method_id' => $cash?->id,
+                        'user_id' => Auth::id(),
+                    ]);
+                }
+            }
+
+            // Une faute de frappe plus basse ne doit pas fausser les rappels de vidange.
+            if ($order->mileage !== null && ($vehicle->last_mileage === null || $order->mileage > $vehicle->last_mileage)) {
+                $vehicle->update(['last_mileage' => $order->mileage]);
+            }
+
+            $order->status = ServiceOrderStatus::Completed;
+            $order->completed_at = now();
+            $order->save();
+
+            // Phase 6 : la facture sera générée ici (GenerateInvoice), dans la même transaction.
+
+            return $warnings;
+        });
+    }
+
+    private function ensureCompletable(ServiceOrder $order): void
+    {
+        if (! $order->isInProgress()) {
+            throw ValidationException::withMessages(['status' => 'Cette prestation est déjà terminée.']);
+        }
+
+        if ($order->lines->isEmpty()) {
+            throw ValidationException::withMessages(['lines' => 'Ajoutez au moins un travail.']);
+        }
+
+        $errors = [];
+        $needsMileage = $order->lines->filter(fn ($line) => $line->serviceType->requires_mileage);
+
+        if ($order->mileage === null && $needsMileage->isNotEmpty()) {
+            $errors['mileage'] = 'Le kilométrage est obligatoire pour : '.$needsMileage->pluck('serviceType.name')->unique()->implode(', ').'.';
+        }
+
+        foreach ($order->lines->values() as $index => $line) {
+            if ($line->employee_id === null) {
+                $errors["lines.{$index}.employee_id"] = 'Choisissez le mécanicien.';
+            }
+        }
+
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
+        }
+    }
+}

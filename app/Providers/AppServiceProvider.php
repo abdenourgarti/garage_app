@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Models\Purchase;
 use App\Models\PurchasePayment;
+use App\Models\ServiceOrder;
+use App\Models\ServiceOrderPart;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -35,6 +37,8 @@ class AppServiceProvider extends ServiceProvider
         Relation::enforceMorphMap([
             'purchase' => Purchase::class,
             'purchase_payment' => PurchasePayment::class,
+            'service_order' => ServiceOrder::class,
+            'service_order_part' => ServiceOrderPart::class,
         ]);
     }
 
@@ -68,5 +72,6 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('manage-employees', fn (User $user): bool => false);
         Gate::define('manage-admin', fn (User $user): bool => false);
         Gate::define('manage-references', fn (User $user): bool => true);
+        Gate::define('delete-service-orders', fn (User $user): bool => false);
     }
 }

@@ -6,6 +6,8 @@ use App\Http\Controllers\Admin\ReferenceController;
 use App\Http\Controllers\Clients\ClientController;
 use App\Http\Controllers\Clients\LookupController;
 use App\Http\Controllers\Clients\VehicleController;
+use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\ServiceOrders\ServiceOrderController;
 use App\Http\Controllers\Stock\ArticleController;
 use App\Http\Controllers\Stock\OilProductController;
 use App\Http\Controllers\Stock\PurchaseController;
@@ -20,13 +22,26 @@ Route::middleware('auth')->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
 
     // shortcut: pages « Bientôt disponible » le temps que chaque module soit livré (phases 3 à 14).
-    Route::inertia('service-orders', 'coming-soon', ['title' => 'Prestations'])->name('service-orders.index');
-    Route::inertia('service-orders/create', 'coming-soon', ['title' => 'Nouvelle prestation'])->name('service-orders.create');
     Route::inertia('appointments', 'coming-soon', ['title' => 'Rendez-vous'])->name('appointments.index');
     Route::inertia('invoices', 'coming-soon', ['title' => 'Factures'])->name('invoices.index');
 
     Route::inertia('cash', 'coming-soon', ['title' => 'Caisse'])->middleware('can:manage-cash')->name('cash.index');
-    Route::inertia('employees', 'coming-soon', ['title' => 'Employés'])->middleware('can:manage-employees')->name('employees.index');
+    Route::middleware('can:manage-employees')->group(function () {
+        Route::get('employees', [EmployeeController::class, 'index'])->name('employees.index');
+        Route::post('employees', [EmployeeController::class, 'store'])->name('employees.store');
+        Route::put('employees/{employee}', [EmployeeController::class, 'update'])->name('employees.update');
+        Route::patch('employees/{employee}/toggle', [EmployeeController::class, 'toggle'])->name('employees.toggle');
+    });
+
+    // Prestations (gérant et employé ; suppression : gérant).
+    Route::get('service-orders', [ServiceOrderController::class, 'index'])->name('service-orders.index');
+    Route::get('service-orders/create', [ServiceOrderController::class, 'create'])->name('service-orders.create');
+    Route::post('service-orders', [ServiceOrderController::class, 'store'])->name('service-orders.store');
+    Route::get('service-orders/{order}', [ServiceOrderController::class, 'show'])->name('service-orders.show');
+    Route::get('service-orders/{order}/edit', [ServiceOrderController::class, 'edit'])->name('service-orders.edit');
+    Route::put('service-orders/{order}', [ServiceOrderController::class, 'update'])->name('service-orders.update');
+    Route::post('service-orders/{order}/complete', [ServiceOrderController::class, 'complete'])->name('service-orders.complete');
+    Route::delete('service-orders/{order}', [ServiceOrderController::class, 'destroy'])->name('service-orders.destroy');
 
     // Clients et véhicules (gérant et employé).
     Route::get('clients', [ClientController::class, 'index'])->name('clients.index');
@@ -77,6 +92,8 @@ Route::middleware('auth')->group(function () {
         Route::get('clients/{client}/vehicles', [LookupController::class, 'clientVehicles'])->name('client-vehicles');
         Route::get('vehicles', [LookupController::class, 'vehicles'])->name('vehicles');
         Route::get('articles', [LookupController::class, 'articles'])->name('articles');
+        Route::get('service-vehicles', [LookupController::class, 'serviceVehicles'])->name('service-vehicles');
+        Route::get('oils', [LookupController::class, 'oils'])->name('oils');
     });
 
     // Logo du garage : lisible par tous (factures, bilans), modifiable par le gérant.

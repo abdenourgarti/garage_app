@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Clients;
 
 use App\Actions\Clients\CreateClientWithVehicle;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\ServiceOrders\ServiceOrderController;
 use App\Http\Requests\Clients\ClientRequest;
 use App\Http\Requests\Clients\QuickClientRequest;
 use App\Models\Client;
+use App\Models\ServiceOrder;
 use App\Models\Vehicle;
 use App\Support\FormOptions;
 use Illuminate\Http\JsonResponse;
@@ -64,6 +66,7 @@ class ClientController extends Controller
                 'last_mileage' => $vehicle->last_mileage,
                 'is_active' => $vehicle->is_active,
             ]),
+            'serviceOrders' => ServiceOrderController::history(ServiceOrder::where('client_id', $client->id)),
             'options' => FormOptions::clientVehicle(),
         ]);
     }

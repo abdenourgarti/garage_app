@@ -1,5 +1,5 @@
-import { Head, router, useForm } from '@inertiajs/react';
-import { Pencil, Plus, Users } from 'lucide-react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Pencil, Plus, Users, Wallet } from 'lucide-react';
 import { useState } from 'react';
 import EmployeeController from '@/actions/App/Http/Controllers/EmployeeController';
 import { ActiveToggle } from '@/components/app/active-toggle';
@@ -7,9 +7,17 @@ import { DataTable } from '@/components/app/data-table';
 import type { Column, Paginated } from '@/components/app/data-table';
 import { EmptyState } from '@/components/app/empty-state';
 import { FormField } from '@/components/app/form-field';
+import { MoneyInput } from '@/components/app/money-input';
 import { PageHeader } from '@/components/app/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import {
     Sheet,
     SheetContent,
@@ -18,13 +26,19 @@ import {
     SheetTitle,
 } from '@/components/ui/sheet';
 import { Spinner } from '@/components/ui/spinner';
+import { formatMoney } from '@/lib/format';
 import { fr } from '@/lib/i18n/fr';
+import { show as showEmployee } from '@/routes/employees';
+import { index as payrollIndex } from '@/routes/payroll';
+import type { Option } from '@/types/stock';
 
 type EmployeeRow = {
     id: number;
     name: string;
     position: string | null;
     phone: string | null;
+    salary_type: 'monthly' | 'daily';
+    salary_amount: string;
     is_active: boolean;
 };
 
@@ -32,10 +46,12 @@ const t = fr.employees;
 
 function EmployeeSheet({
     employee,
+    salaryTypes,
     open,
     onOpenChange,
 }: {
     employee: EmployeeRow | null;
+    salaryTypes: Option[];
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }) {
@@ -43,6 +59,8 @@ function EmployeeSheet({
         name: employee?.name ?? '',
         position: employee?.position ?? '',
         phone: employee?.phone ?? '',
+        salary_type: employee?.salary_type ?? 'monthly',
+        salary_amount: employee?.salary_amount ?? '',
     });
 
     const submit = (event: React.FormEvent) => {
@@ -53,6 +71,8 @@ function EmployeeSheet({
                     name: data.name,
                     position: data.position || null,
                     phone: data.phone || null,
+                    salary_type: data.salary_type,
+                    salary_amount: data.salary_amount || '0',
                 }) as never,
         );
         form.submit(
@@ -121,6 +141,59 @@ function EmployeeSheet({
                                 }
                             />
                         </FormField>
+                        <div className="grid grid-cols-2 gap-3">
+                            <FormField
+                                id="employee-salary-type"
+                                label={t.salaryType}
+                                required
+                                error={form.errors.salary_type}
+                            >
+                                <Select
+                                    value={form.data.salary_type}
+                                    onValueChange={(value) =>
+                                        form.setData(
+                                            'salary_type',
+                                            value as EmployeeRow['salary_type'],
+                                        )
+                                    }
+                                >
+                                    <SelectTrigger
+                                        id="employee-salary-type"
+                                        className="h-11 w-full"
+                                    >
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {salaryTypes.map((type) => (
+                                            <SelectItem
+                                                key={type.value}
+                                                value={type.value}
+                                            >
+                                                {type.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </FormField>
+                            <FormField
+                                id="employee-salary"
+                                label={t.salaryAmount}
+                                hint={t.salaryAmountHint}
+                                required
+                                error={form.errors.salary_amount}
+                            >
+                                <MoneyInput
+                                    id="employee-salary"
+                                    value={form.data.salary_amount}
+                                    onValueChange={(value) =>
+                                        form.setData('salary_amount', value)
+                                    }
+                                    aria-invalid={Boolean(
+                                        form.errors.salary_amount,
+                                    )}
+                                />
+                            </FormField>
+                        </div>
                     </div>
                     <SheetFooter className="mt-auto flex-row gap-2 border-t">
                         <Button
@@ -148,8 +221,10 @@ function EmployeeSheet({
 
 export default function EmployeesIndex({
     rows,
+    salaryTypes,
 }: {
     rows: Paginated<EmployeeRow>;
+    salaryTypes: Option[];
 }) {
     const [editing, setEditing] = useState<EmployeeRow | 'new' | null>(null);
     const [openCount, setOpenCount] = useState(0);
@@ -160,7 +235,15 @@ export default function EmployeesIndex({
     };
 
     const columns: Column<EmployeeRow>[] = [
-        { key: 'name', header: t.name, cell: (row) => row.name },
+        {
+            key: 'name',
+            header: t.name,
+            cell: (row) => (
+                <Link href={showEmployee(row.id)} className="hover:underline">
+                    {row.name}
+                </Link>
+            ),
+        },
         {
             key: 'position',
             header: t.position,
@@ -171,6 +254,15 @@ export default function EmployeesIndex({
             header: t.phone,
             cell: (row) => (
                 <span className="tabular-nums">{row.phone ?? '—'}</span>
+            ),
+        },
+        {
+            key: 'salary',
+            header: t.salaryAmount,
+            cell: (row) => (
+                <span className="tabular-nums">
+                    {t.salary(formatMoney(row.salary_amount), row.salary_type)}
+                </span>
             ),
         },
         {
@@ -220,7 +312,17 @@ export default function EmployeesIndex({
                 <PageHeader
                     title={t.title}
                     description={t.description}
-                    actions={addButton}
+                    actions={
+                        <div className="flex flex-wrap gap-2">
+                            <Button asChild variant="outline" className="h-11">
+                                <Link href={payrollIndex()}>
+                                    <Wallet />
+                                    {t.payroll}
+                                </Link>
+                            </Button>
+                            {addButton}
+                        </div>
+                    }
                 />
                 <DataTable
                     rows={rows}
@@ -239,6 +341,7 @@ export default function EmployeesIndex({
             </div>
             <EmployeeSheet
                 key={openCount}
+                salaryTypes={salaryTypes}
                 employee={editing === 'new' ? null : editing}
                 open={editing !== null}
                 onOpenChange={(value) => !value && setEditing(null)}

@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Purchase;
 use App\Models\PurchasePayment;
+use App\Models\SalaryPayment;
 use App\Models\ServiceOrder;
 use App\Models\User;
 use Carbon\CarbonImmutable;
@@ -38,6 +39,7 @@ class AppServiceProvider extends ServiceProvider
             'purchase' => Purchase::class,
             'purchase_payment' => PurchasePayment::class,
             'service_order' => ServiceOrder::class,
+            'salary_payment' => SalaryPayment::class,
         ]);
     }
 

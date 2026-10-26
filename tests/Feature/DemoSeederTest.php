@@ -8,6 +8,7 @@ use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Purchase;
+use App\Models\SalaryPayment;
 use App\Models\ServiceOrder;
 use App\Models\StockMovement;
 use App\Models\Vehicle;
@@ -39,6 +40,11 @@ it('fills a coherent year of demo data, only once', function () {
         ->and(Invoice::whereColumn('amount_paid', '>', 'total')->exists())->toBeFalse()
         ->and(Purchase::where('status', PurchaseStatus::Received)->count())->toBeGreaterThan(10)
         ->and(Vehicle::whereNull('last_mileage')->exists())->toBeFalse();
+
+    // Paie : 11 mois payés pour 3 employés, un excédent d'avances reporté.
+    expect(SalaryPayment::count())->toBe(33)
+        ->and(SalaryPayment::where('carried_in', '>', 0)->count())->toBe(1)
+        ->and(SalaryPayment::where('period', now()->format('Y-m'))->exists())->toBeFalse();
 
     $payments = Payment::count();
     $this->seed(DemoSeeder::class);

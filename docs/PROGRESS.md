@@ -14,7 +14,7 @@
 | 7 — Recherche et historique | ✅ Terminé | 26/10/2026 | Recherche globale Ctrl+K (loupe plein écran sur mobile) : clients, véhicules, factures, prestations dès 2 caractères, clavier. Recherche avancée intégrée à la liste Prestations (tous les filtres M9, cumulables, dans l'adresse), colonnes travaux et facture, export CSV Excel (BOM, « ; »). Carnet en chronologie avec filtre par type et lien facture. Index vérifié par EXPLAIN, `preventLazyLoading`. `DemoSeeder` : 1 an, 30 clients, 50 véhicules, 200 prestations. 147 Pest + 13 JS, parcours navigateur. |
 | 8 — Utilisateurs, sauvegardes, licence | ✅ Terminé | 26/10/2026 | Paramètres > Utilisateurs (créer, modifier, rôle, activer, mot de passe provisoire ; dernier gérant protégé), Paramètres > Sauvegardes (zip base + fichiers, copie D:/USB, 30 jours, planifiée toutes les heures si > 24 h, restauration en deux confirmations), licence hors ligne (identifiant machine, clé de 20 caractères, commande développeur). 163 Pest (dont sauvegarde/restauration réelles) + 13 JS, parcours navigateur. |
 | 9 — Packaging Windows | ⬜ À faire | | |
-| 10 — Employés et salaires | ⬜ À faire | | |
+| 10 — Employés et salaires | ✅ Terminé | 26/10/2026 | Salaire mensuel ou journalier, fiche employé par mois (travaux, avances, paies), avances en saisie rapide (dépense « Avances », supprimable avant la paie), paie du mois (base − avances − report = reste, une paie par mois, excédent reporté), bulletin A4/PDF. Gérant seulement. Données de démo : 11 mois de paie. 170 Pest + 14 JS, parcours navigateur. |
 | 11 — Caisse et bénéfice | ⬜ À faire | | |
 | 12 — Tableau de bord | ⬜ À faire | | |
 | 13 — Rendez-vous | ⬜ À faire | | |
@@ -81,6 +81,10 @@
 - **Phase 8** — Compte initial (seeder) et comptes réinitialisés : mot de passe provisoire à changer à la connexion. Compte désactivé déconnecté immédiatement. Le gérant ne peut ni se désactiver ni changer son propre rôle ; le dernier gérant actif est protégé.
 - **Phase 8** — Défaut trouvé au navigateur : depuis le serveur web, `mariadb-dump` échouait (Windows, erreur 10106, `SystemRoot` absent de l’environnement) → `App\Support\ProcessEnv` transmis à `mariadb-dump`, `mariadb` et PowerShell.
 - **Phase 8** — Tests : dossier `tests/Integration` (sans transaction, `DatabaseTruncation`) pour la vraie sauvegarde/restauration ; SSR Inertia coupé dans les tests (`INERTIA_SSR_ENABLED=false`), sinon chaque page attendait 2 s le serveur Vite.
+
+- **Phase 9 reportée** (demande du client) : l’installateur Windows sera fait quand toutes les fonctionnalités seront terminées.
+- **Phase 10** — Avances supérieures au salaire : reste 0 DA, pas de dépense, l’excédent est repris le mois suivant (`salary_payments.carried_in`, affiché sur le bulletin). Pas d’annulation de paie (non demandée) ; une avance se supprime tant que la paie du mois n’est pas faite. Pas de prorata d’embauche en cours de mois.
+- **Phase 10** — Salaire journalier : jours travaillés proposés = jours où l’employé a une prestation dans le mois, modifiables avant de payer. Le mois à venir ne se paie pas ; une avance datée d’un mois déjà payé est refusée.
 
 ## Points ouverts
 

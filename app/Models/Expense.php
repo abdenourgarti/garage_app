@@ -22,7 +22,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $notes
  * @property int $user_id
  */
-#[Fillable(['expense_category_id', 'label', 'amount', 'spent_at', 'payment_method_id', 'source_type', 'source_id', 'notes', 'user_id'])]
+#[Fillable(['expense_category_id', 'label', 'amount', 'spent_at', 'payment_method_id', 'employee_id', 'source_type', 'source_id', 'notes', 'user_id'])]
 class Expense extends Model
 {
     /** @use HasFactory<ExpenseFactory> */

@@ -44,3 +44,11 @@ export function periodRange(
             };
     }
 }
+
+/** « 2026-10 » + 1 → « 2026-11 » (passage d'année compris). */
+export function shiftMonth(period: string, delta: number): string {
+    const [year, month] = period.split('-').map(Number);
+    const date = new Date(year, month - 1 + delta, 1);
+
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+}

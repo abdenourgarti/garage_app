@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { periodRange } from './period';
+import { periodRange, shiftMonth } from './period';
 
 // Mercredi 22 octobre 2026.
 const wednesday = new Date(2026, 9, 22);
@@ -33,5 +33,13 @@ describe('periodRange', () => {
             from: '2026-01-01',
             to: '2026-12-31',
         });
+    });
+});
+
+describe('shiftMonth', () => {
+    it('moves across years', () => {
+        expect(shiftMonth('2026-12', 1)).toBe('2027-01');
+        expect(shiftMonth('2026-01', -1)).toBe('2025-12');
+        expect(shiftMonth('2026-10', 0)).toBe('2026-10');
     });
 });

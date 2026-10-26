@@ -107,7 +107,7 @@ Crédit client = somme de (`total − amount_paid`) des factures non annulées d
 | `expenses` | `expense_category_id` FK, `label`, `amount`, `spent_at` date, `payment_method_id` FK null, `employee_id` FK null (ajouté en phase 10 avec `employees`), `source_type`/`source_id` (morph : PurchasePayment, SalaryPayment, ServiceOrder pour les pièces extérieures) null, `notes` null, `user_id` FK |
 | `other_incomes` | `label`, `amount`, `received_at` date, `payment_method_id` FK null, `notes` null, `user_id` FK |
 | `employees` | `name`, `position` null, `phone` null, `salary_type` enum(`monthly`,`daily`), `salary_amount`, `is_active` |
-| `salary_payments` | `employee_id` FK, `period` char(7) (`2026-10`), `days_worked` smallint null, `base_amount`, `advances_total`, `net_paid`, `paid_at` date, `user_id` FK ; unique(`employee_id`,`period`) |
+| `salary_payments` | `employee_id` FK, `period` char(7) (`2026-10`), `days_worked` smallint null, `base_amount`, `advances_total`, `carried_in` default 0 (avances du mois précédent au-delà du salaire), `net_paid`, `paid_at` date, `payment_method_id` FK null, `user_id` FK ; unique(`employee_id`,`period`) |
 
 Une avance = une `expense` de catégorie système `advances` avec `employee_id`.
 

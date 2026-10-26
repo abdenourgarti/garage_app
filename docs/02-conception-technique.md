@@ -116,8 +116,8 @@ et le menu React masque les entrées non autorisées (prop partagée `auth.can`)
 | `RecordPayment` | `Payment` ; recalcule `amount_paid` et statut (`impayee` / `partielle` / `payee`) ; refuse un montant > reste à payer |
 | `CancelInvoice` (gérant) | Motif obligatoire ; paiements marqués annulés ; facture `annulee` ; prestation repasse `en_cours` ; pièces stock réintégrées (mouvement `cancellation_in`) ; dépenses des pièces externes conservées |
 | `RecordExpense` / `RecordOtherIncome` | Écriture simple datée |
-| `RecordSalaryAdvance` | `Expense` catégorie système « Avances » liée à l'employé |
-| `PaySalary` | Calcule base (mensuel, ou journalier × jours saisis) − avances du mois ; `SalaryPayment` + `Expense` « Salaires » ; une seule paie par employé et par mois |
+| `RecordSalaryAdvance` | `Expense` catégorie système « Avances » liée à l'employé ; refusée sur un mois déjà payé |
+| `PaySalary` | `PayrollService` : base (mensuel, ou journalier × jours saisis, proposés = jours avec prestations) − avances du mois − report ; `SalaryPayment` + `Expense` « Salaires » (rien si 0) ; une seule paie par employé et par mois (verrou employé + index unique) ; avances > salaire → reste 0 et excédent reporté sur le mois suivant (`carried_in`) |
 | `StartAppointment` | Crée la prestation pré-remplie, lie `appointments.service_order_id`, statut `effectue` |
 | `RunBackup` / `RestoreBackup` | Voir `06-deploiement-windows.md` |
 

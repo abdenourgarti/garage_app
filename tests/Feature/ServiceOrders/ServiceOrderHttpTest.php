@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\OilFormat;
+use App\Enums\SalaryType;
 use App\Enums\ServiceOrderStatus;
 use App\Models\Article;
 use App\Models\Employee;
@@ -156,8 +157,10 @@ test('the vehicle lookup finds by plate or owner phone, the oil lookup returns t
 test('the gerant manages the employees, the employe can not', function () {
     $this->get(route('employees.index'))->assertForbidden();
 
-    $this->actingAs($this->gerant)->post(route('employees.store'), ['name' => 'Samir', 'position' => 'Électricien', 'phone' => '0550 00 00 00'])->assertSessionHasNoErrors();
+    $this->actingAs($this->gerant)->post(route('employees.store'), ['name' => 'Samir', 'position' => 'Électricien', 'phone' => '0550 00 00 00'])->assertSessionHasErrors(['salary_type', 'salary_amount']);
+    $this->post(route('employees.store'), ['name' => 'Samir', 'position' => 'Électricien', 'phone' => '0550 00 00 00', 'salary_type' => 'daily', 'salary_amount' => '1800'])->assertSessionHasNoErrors();
     $samir = Employee::where('name', 'Samir')->sole();
+    expect($samir->salary_type)->toBe(SalaryType::Daily)->and($samir->salary_amount)->toBe('1800.00');
     $this->patch(route('employees.toggle', $samir));
 
     expect($samir->fresh()->is_active)->toBeFalse();

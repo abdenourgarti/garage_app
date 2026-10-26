@@ -12,6 +12,7 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\Invoices\InvoiceController;
 use App\Http\Controllers\Invoices\PaymentController;
 use App\Http\Controllers\LicenseController;
+use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ServiceOrders\ServiceOrderController;
 use App\Http\Controllers\Stock\ArticleController;
@@ -38,6 +39,12 @@ Route::middleware('auth')->group(function () {
     Route::inertia('cash', 'coming-soon', ['title' => 'Caisse'])->middleware('can:manage-cash')->name('cash.index');
     Route::middleware('can:manage-employees')->group(function () {
         Route::get('employees', [EmployeeController::class, 'index'])->name('employees.index');
+        Route::get('employees/payroll', [PayrollController::class, 'index'])->name('payroll.index');
+        Route::get('employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show');
+        Route::post('employees/{employee}/pay', [PayrollController::class, 'pay'])->name('payroll.pay');
+        Route::post('advances', [PayrollController::class, 'storeAdvance'])->name('advances.store');
+        Route::delete('advances/{advance}', [PayrollController::class, 'destroyAdvance'])->name('advances.destroy');
+        Route::get('salary-payments/{payment}/payslip/{format}', [PayrollController::class, 'payslip'])->whereIn('format', ['a4', 'pdf'])->name('payroll.payslip');
         Route::post('employees', [EmployeeController::class, 'store'])->name('employees.store');
         Route::put('employees/{employee}', [EmployeeController::class, 'update'])->name('employees.update');
         Route::patch('employees/{employee}/toggle', [EmployeeController::class, 'toggle'])->name('employees.toggle');

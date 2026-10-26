@@ -6,6 +6,8 @@ use App\Actions\Clients\CreateClientWithVehicle;
 use App\Actions\Invoices\ApplyDiscount;
 use App\Actions\Invoices\CancelInvoice;
 use App\Actions\Invoices\RecordPayment;
+use App\Actions\Payroll\PaySalary;
+use App\Actions\Payroll\RecordSalaryAdvance;
 use App\Actions\Purchases\RecordPurchase;
 use App\Actions\ServiceOrders\CompleteServiceOrder;
 use App\Actions\ServiceOrders\SaveServiceOrder;
@@ -14,6 +16,7 @@ use App\Actions\Stock\SaveOilProduct;
 use App\Actions\Vehicles\CreateVehicle;
 use App\Enums\OilUsage;
 use App\Enums\PurchaseStatus;
+use App\Enums\SalaryType;
 use App\Enums\StockUnit;
 use App\Enums\UserRole;
 use App\Models\Article;
@@ -24,6 +27,7 @@ use App\Models\Employee;
 use App\Models\Energy;
 use App\Models\Invoice;
 use App\Models\PaymentMethod;
+use App\Models\SalaryPayment;
 use App\Models\ServiceOrder;
 use App\Models\ServiceType;
 use App\Models\Supplier;
@@ -83,6 +87,7 @@ class DemoSeeder extends Seeder
             $this->catalog();
             $this->employees();
             $this->history();
+            $this->payroll();
         } finally {
             Carbon::setTestNow();
             mt_srand();
@@ -206,6 +211,55 @@ class DemoSeeder extends Seeder
         });
 
         $this->command->info('Employés : 3 mécaniciens.');
+    }
+
+    /** Nom → [type de salaire, montant]. */
+    private const SALARIES = [
+        'Mourad Benali' => [SalaryType::Monthly, '60000'],
+        'Sofiane Haddad' => [SalaryType::Monthly, '45000'],
+        'Bilal Ouali' => [SalaryType::Daily, '1500'],
+    ];
+
+    /**
+     * Un an d'avances (1 à 3 par mois) et de paies en fin de mois ; le mois en cours n'est pas encore payé.
+     * Il y a 5 mois, Sofiane a reçu plus d'avances que son salaire : l'excédent est reporté le mois suivant.
+     */
+    private function payroll(): void
+    {
+        if (SalaryPayment::exists()) {
+            return;
+        }
+
+        foreach (self::SALARIES as $name => [$type, $amount]) {
+            Employee::where('name', $name)->where('salary_amount', 0)->update(['salary_type' => $type, 'salary_amount' => $amount]);
+        }
+
+        $employees = Employee::where('is_active', true)->orderBy('id')->get();
+        $advance = app(RecordSalaryAdvance::class);
+        $pay = app(PaySalary::class);
+        $cash = PaymentMethod::where('is_cash', true)->firstOrFail();
+
+        for ($ago = 11; $ago >= 0; $ago--) {
+            $month = today()->startOfMonth()->subMonths($ago);
+            $lastDay = $ago === 0 ? today()->day : 28;
+
+            foreach ($employees as $employee) {
+                $amounts = $ago === 5 && $employee->name === 'Sofiane Haddad'
+                    ? ['30000', '20000']
+                    : array_map(fn () => (string) (mt_rand(2, 8) * 1000), range(1, mt_rand(1, 3)));
+
+                foreach ($amounts as $amount) {
+                    $this->atDate($month->setDay(mt_rand(1, $lastDay))->setTime(12, 0), fn () => $advance->handle($employee, $amount, today(), $cash));
+                }
+
+                if ($ago > 0) {
+                    $days = $employee->salary_type === SalaryType::Daily ? mt_rand(20, 25) : null;
+                    $this->atDate($month->endOfMonth()->setTime(17, 0), fn () => $pay->handle($employee, $month->format('Y-m'), $days, today(), $cash));
+                }
+            }
+        }
+
+        $this->command->info('Paie : 11 mois payés, avances du mois en cours à déduire.');
     }
 
     /**

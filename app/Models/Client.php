@@ -73,6 +73,24 @@ class Client extends Model
      */
     public function scopeSearch(Builder $query, string $term): void
     {
+        $query->where(function (Builder $query) use ($term) {
+            $query->identity($term);
+
+            if (preg_match('/\d/', $term)) {
+                $plate = Normalize::plate($term);
+
+                $query->orWhereHas('vehicles', fn (Builder $query) => $query->where('plate_normalized', 'like', "{$plate}%"));
+            }
+        });
+    }
+
+    /**
+     * Phone (start), last name or first name only: the « client » filter of the advanced search.
+     *
+     * @param  Builder<static>  $query
+     */
+    public function scopeIdentity(Builder $query, string $term): void
+    {
         $words = preg_split('/\s+/', trim($term), -1, PREG_SPLIT_NO_EMPTY);
 
         $query->where(function (Builder $query) use ($term, $words) {
@@ -85,11 +103,7 @@ class Client extends Model
             });
 
             if (preg_match('/\d/', $term)) {
-                $phone = Normalize::phone($term);
-                $plate = Normalize::plate($term);
-
-                $query->orWhere('phone_normalized', 'like', "{$phone}%")
-                    ->orWhereHas('vehicles', fn (Builder $query) => $query->where('plate_normalized', 'like', "{$plate}%"));
+                $query->orWhere('phone_normalized', 'like', Normalize::phone($term).'%');
             }
         });
     }

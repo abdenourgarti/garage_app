@@ -11,7 +11,7 @@
 | 4 — Stock, huiles, achats | ✅ Terminé | 22/10/2026 | Articles et huiles (fiche + formats bidon 5/4/1 L et vrac, chacun avec ses prix et son stock), `StockService` (stock = somme des mouvements), ouvrir un bidon, correction par stock compté, achats Brouillon → Commandée → Reçue / Annulée, paiements fournisseurs (dépense « Achats pièces ») avec preuve et facture jointes, fiches fournisseur (reste dû). Tests sur MariaDB : 111 Pest + 13 JS, parcours navigateur complet. |
 | 5 — Prestations | ✅ Terminé | 23/10/2026 | Écran « Nouvelle prestation » en sections (véhicule + création rapide, km, date, immobilisation, types fréquents en boutons, mécanicien par ligne, pièces Stock / Huile / Client / Extérieur, récapitulatif collant), numérotation PR-AAAA-00001 verrouillée, `SaveServiceOrder` + `CompleteServiceOrder` (sorties de stock à coût figé, dépense pièces extérieures, dernier km), liste filtrée, fiche, carnet sur la fiche véhicule et onglet client, mécaniciens (CRUD minimal). 132 Pest + 13 JS ; S1 = 20 clics, 8 champs. |
 | 6 — Factures et paiements | ✅ Terminé | 23/10/2026 | « Terminer et facturer » crée la facture FA-AAAA-00001 et mène à sa fiche (aperçu fidèle, Encaisser avec reste proposé, remise avant paiement, annulation gérant avec motif). Paiements partiels, crédit client (fiche client + liste « Crédits clients » par ancienneté). Facture et reçu en A4, ticket 80 mm et PDF (dompdf). Données de démonstration (`DemoSeeder`). 141 Pest + 13 JS, parcours navigateur complet. |
-| 7 — Recherche et historique | ⬜ À faire | | |
+| 7 — Recherche et historique | ✅ Terminé | 26/10/2026 | Recherche globale Ctrl+K (loupe plein écran sur mobile) : clients, véhicules, factures, prestations dès 2 caractères, clavier. Recherche avancée intégrée à la liste Prestations (tous les filtres M9, cumulables, dans l'adresse), colonnes travaux et facture, export CSV Excel (BOM, « ; »). Carnet en chronologie avec filtre par type et lien facture. Index vérifié par EXPLAIN, `preventLazyLoading`. `DemoSeeder` : 1 an, 30 clients, 50 véhicules, 200 prestations. 147 Pest + 13 JS, parcours navigateur. |
 | 8 — Utilisateurs, sauvegardes, licence | ⬜ À faire | | |
 | 9 — Packaging Windows | ⬜ À faire | | |
 | 10 — Employés et salaires | ⬜ À faire | | |
@@ -70,7 +70,14 @@
 - **Phase 6** — Remise en DA seulement (pas de pourcentage) ; pas d’annulation d’un paiement seul (on annule la facture). Preuve de paiement facultative (chèque, virement). « Encaisser » propose le reste à payer, Espèces par défaut.
 - **Phase 6** — Limite connue : le document d’une facture annulée relit les lignes de la prestation ; si elle est corrigée ensuite, ses lignes changent (totaux d’origine conservés).
 
+- **Phase 7** — Pas d’écran « Recherche avancée » séparé : le panneau « Filtres » de la liste Prestations porte tous les filtres du CDC M9 (client = téléphone / nom / prénom, wilaya, matricule ou châssis, marque → modèle, année du… au…, date du… au…, types multiples = au moins un), en plus de l’état et du mécanicien. Types dans l’adresse sous la forme `types=1,3`.
+- **Phase 7** — Recherche globale : véhicules par matricule ou châssis (début d’abord, puis milieu) ; numéro de facture ou de prestation : « 26 » = fin du numéro (pas l’année). Entrée ouvre le premier résultat.
+- **Phase 7** — Index ajouté `service_order_lines(service_type_id, service_order_id)` (EXPLAIN : parcours complet → index couvrant) ; filtres de date sans `DATE()` pour utiliser l’index `service_orders.date`. `Model::preventLazyLoading()` hors production.
+- **Phase 7** — `DemoSeeder` réécrit (1 an, ordre chronologique, réapprovisionnement mensuel, crédits anciens et récents) ; l’historique ne se génère que sur une base sans prestation.
+
 ## Points ouverts
+
+- Mesure de rapidité sur 10 ans de données (objectif < 1 s) non faite : à mesurer sur une copie de base volumineuse avant la recette (phase 15).
 
 - Accès de l’employé à la caisse et au bénéfice : à confirmer avec le client avant la phase 11 (le CDC le réserve au gérant).
 - Un utilisateur désactivé pendant sa session reste connecté jusqu'à expiration (8 h) : à traiter avec la gestion des utilisateurs (phase 8).

@@ -98,9 +98,9 @@ export function DataTable<T>({
     return (
         <div className="space-y-4">
             {(searchPlaceholder || filters) && (
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                     {searchPlaceholder && (
-                        <div className="relative sm:max-w-sm sm:flex-1">
+                        <div className="relative sm:max-w-sm sm:min-w-64 sm:flex-1">
                             <Search className="pointer-events-none absolute inset-y-0 start-3 my-auto size-4 text-muted-foreground" />
                             <Input
                                 type="search"

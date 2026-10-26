@@ -9,6 +9,7 @@ use App\Http\Controllers\Clients\VehicleController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\Invoices\InvoiceController;
 use App\Http\Controllers\Invoices\PaymentController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ServiceOrders\ServiceOrderController;
 use App\Http\Controllers\Stock\ArticleController;
 use App\Http\Controllers\Stock\OilProductController;
@@ -22,6 +23,7 @@ Route::redirect('/', '/dashboard')->name('home');
 
 Route::middleware('auth')->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
+    Route::get('search', SearchController::class)->name('search');
 
     // shortcut: pages « Bientôt disponible » le temps que chaque module soit livré (phases 3 à 14).
     Route::inertia('appointments', 'coming-soon', ['title' => 'Rendez-vous'])->name('appointments.index');
@@ -37,6 +39,7 @@ Route::middleware('auth')->group(function () {
     // Prestations (gérant et employé ; suppression : gérant).
     Route::get('service-orders', [ServiceOrderController::class, 'index'])->name('service-orders.index');
     Route::get('service-orders/create', [ServiceOrderController::class, 'create'])->name('service-orders.create');
+    Route::get('service-orders/export', [ServiceOrderController::class, 'export'])->name('service-orders.export');
     Route::post('service-orders', [ServiceOrderController::class, 'store'])->name('service-orders.store');
     Route::get('service-orders/{order}', [ServiceOrderController::class, 'show'])->name('service-orders.show');
     Route::get('service-orders/{order}/edit', [ServiceOrderController::class, 'edit'])->name('service-orders.edit');

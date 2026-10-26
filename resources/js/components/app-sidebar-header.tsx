@@ -1,8 +1,8 @@
 import { Link, usePage } from '@inertiajs/react';
 import { Plus, Search } from 'lucide-react';
-import { useEffect } from 'react';
-import { toast } from 'sonner';
+import { useEffect, useState } from 'react';
 import AppLogoIcon from '@/components/app-logo-icon';
+import { GlobalSearch } from '@/components/global-search';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -15,13 +15,15 @@ import { fr } from '@/lib/i18n/fr';
 import { dashboard } from '@/routes';
 import { create as createServiceOrder } from '@/routes/service-orders';
 
-// shortcut: la palette Ctrl+K (GlobalSearch) arrive en phase 7 ; d'ici là le bouton l'annonce.
-function openSearch() {
-    toast.info(`${fr.nav.search} : ${fr.common.comingSoon.toLowerCase()}`);
-}
-
 export function AppSidebarHeader() {
     const { auth, name } = usePage().props;
+    const [searching, setSearching] = useState(false);
+    const [searchCount, setSearchCount] = useState(0);
+
+    const openSearch = () => {
+        setSearchCount((count) => count + 1);
+        setSearching(true);
+    };
 
     useEffect(() => {
         const onKeyDown = (event: KeyboardEvent) => {
@@ -103,6 +105,11 @@ export function AppSidebarHeader() {
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
+            <GlobalSearch
+                key={searchCount}
+                open={searching}
+                onOpenChange={setSearching}
+            />
         </header>
     );
 }

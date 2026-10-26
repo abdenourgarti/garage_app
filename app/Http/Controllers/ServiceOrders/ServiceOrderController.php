@@ -27,44 +27,103 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ServiceOrderController extends Controller
 {
+    /**
+     * Liste et recherche avancée des prestations (CDC M9) : tous les filtres dans l'adresse.
+     */
     public function index(Request $request): Response
     {
-        $search = trim($request->string('search')->toString());
-        $status = ServiceOrderStatus::tryFrom($request->string('status')->toString());
-        $employeeId = $request->integer('employee') ?: null;
-        $from = $request->date('from');
-        $to = $request->date('to');
+        $filters = ServiceOrderFilters::fromRequest($request);
 
-        $orders = ServiceOrder::query()
-            ->with(['client:id,first_name,last_name', 'vehicle:id,plate,brand_id,vehicle_model_id', 'vehicle.brand:id,name', 'vehicle.vehicleModel:id,name'])
-            ->withSum('lines', 'labor_price')
-            ->withSum('parts', 'line_total')
-            ->when($search !== '', fn ($query) => $query->where(fn ($query) => $query
-                ->where('number', 'like', "%{$search}%")
-                ->orWhereHas('client', fn ($query) => $query->search($search))
-                ->orWhereHas('vehicle', fn ($query) => $query->search($search))))
-            ->when($status, fn ($query) => $query->where('status', $status))
-            ->when($employeeId, fn ($query) => $query->whereHas('lines', fn ($query) => $query->where('employee_id', $employeeId)))
-            ->when($from, fn ($query) => $query->whereDate('date', '>=', $from))
-            ->when($to, fn ($query) => $query->whereDate('date', '<=', $to))
-            ->latest('date')
-            ->latest('id')
+        $orders = self::listQuery($filters)
             ->paginate(25)
             ->withQueryString()
             ->through(fn (ServiceOrder $order) => [
                 ...self::summary($order),
+                'works' => $order->lines->pluck('serviceType.name')->unique()->implode(', '),
                 'total' => Decimal::add((string) ($order->lines_sum_labor_price ?? 0), (string) ($order->parts_sum_line_total ?? 0)),
+                'invoice' => $order->invoice ? $order->invoice->only(['id', 'number']) + ['status' => $order->invoice->status->value] : null,
             ]);
 
         return Inertia::render('service-orders/index', [
             'rows' => $orders,
-            'filters' => ['search' => $search, 'status' => $status?->value, 'employee' => $employeeId, 'from' => $from?->toDateString(), 'to' => $to?->toDateString()],
+            'filters' => $filters->toArray(),
             'statuses' => ServiceOrderStatus::options(),
             'employees' => Employee::orderBy('name')->get(['id', 'name']),
+            'serviceTypes' => ServiceType::orderBy('name')->get(['id', 'name']),
+            ...FormOptions::clientVehicle(),
         ]);
+    }
+
+    /**
+     * Export CSV des prestations filtrées, pour Excel : UTF-8 avec BOM, séparateur « ; », montants à virgule.
+     */
+    public function export(Request $request): StreamedResponse
+    {
+        $query = self::listQuery(ServiceOrderFilters::fromRequest($request))
+            ->with(['client.wilaya:id,code,name', 'lines.employee:id,name']);
+
+        return response()->streamDownload(function () use ($query) {
+            $out = fopen('php://output', 'w');
+            fwrite($out, "\u{FEFF}");
+            fputcsv($out, ['N°', 'Date', 'Client', 'Téléphone', 'Wilaya', 'Matricule', 'Marque', 'Modèle', 'Année', 'Kilométrage', 'Travaux', 'Mécaniciens', 'Main-d’œuvre', 'Pièces', 'Total', 'État', 'Facture', 'État de la facture'], ';');
+
+            $money = fn (string|int|null $value) => number_format((float) $value, 2, ',', '');
+
+            $query->chunk(500, function ($orders) use ($out, $money) {
+                foreach ($orders as $order) {
+                    $labor = (string) ($order->lines_sum_labor_price ?? 0);
+                    $parts = (string) ($order->parts_sum_line_total ?? 0);
+
+                    fputcsv($out, [
+                        $order->number,
+                        $order->date->format('d/m/Y'),
+                        $order->client->full_name,
+                        $order->client->phone,
+                        $order->client->wilaya ? "{$order->client->wilaya->code} {$order->client->wilaya->name}" : '',
+                        $order->vehicle->plate,
+                        $order->vehicle->brand->name,
+                        $order->vehicle->vehicleModel?->name ?? '',
+                        $order->vehicle->year ?? '',
+                        $order->mileage ?? '',
+                        $order->lines->pluck('serviceType.name')->unique()->implode(', '),
+                        $order->lines->pluck('employee.name')->filter()->unique()->implode(', '),
+                        $money($labor),
+                        $money($parts),
+                        $money(Decimal::add($labor, $parts)),
+                        $order->status->label(),
+                        $order->invoice?->number ?? '',
+                        $order->invoice?->status->label() ?? '',
+                    ], ';');
+                }
+            });
+
+            fclose($out);
+        }, 'prestations-'.now()->format('Y-m-d').'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    /**
+     * @return Builder<ServiceOrder>
+     */
+    private static function listQuery(ServiceOrderFilters $filters): Builder
+    {
+        return $filters->query()
+            ->with([
+                'client:id,first_name,last_name,phone,wilaya_id',
+                'vehicle:id,plate,brand_id,vehicle_model_id,year',
+                'vehicle.brand:id,name',
+                'vehicle.vehicleModel:id,name',
+                'lines:id,service_order_id,service_type_id,employee_id,position',
+                'lines.serviceType:id,name',
+                'invoice:id,service_order_id,number,status',
+            ])
+            ->withSum('lines', 'labor_price')
+            ->withSum('parts', 'line_total')
+            ->latest('date')
+            ->latest('id');
     }
 
     public function create(Request $request): Response
@@ -95,7 +154,6 @@ class ServiceOrderController extends Controller
                 'notes' => $order->notes,
                 'advice' => $order->advice,
                 'client' => $order->client->only(['id', 'full_name', 'phone']),
-                'vehicle_id' => $order->vehicle_id,
                 'completed_at' => $order->completed_at?->toIso8601String(),
                 'user' => $order->user->name,
                 'lines' => $order->lines->map(fn (ServiceOrderLine $line) => [
@@ -243,7 +301,7 @@ class ServiceOrderController extends Controller
     public static function history(Builder $query): array
     {
         return $query
-            ->with(['vehicle:id,plate', 'lines.serviceType:id,name'])
+            ->with(['vehicle:id,plate', 'lines.serviceType:id,name', 'invoice:id,service_order_id,number,status'])
             ->withSum('lines', 'labor_price')
             ->withSum('parts', 'line_total')
             ->latest('date')
@@ -257,6 +315,8 @@ class ServiceOrderController extends Controller
                 'status' => $order->status->value,
                 'plate' => $order->vehicle->plate,
                 'works' => $order->lines->pluck('serviceType.name')->unique()->implode(', '),
+                'types' => $order->lines->pluck('serviceType.name')->unique()->values()->all(),
+                'invoice' => $order->invoice ? $order->invoice->only(['id', 'number']) + ['status' => $order->invoice->status->value] : null,
                 'advice' => $order->advice,
                 'total' => Decimal::add((string) ($order->lines_sum_labor_price ?? 0), (string) ($order->parts_sum_line_total ?? 0)),
             ])
@@ -275,6 +335,7 @@ class ServiceOrderController extends Controller
             'status' => $order->status->value,
             'client_name' => $order->client->full_name,
             'plate' => $order->vehicle->plate,
+            'vehicle_id' => $order->vehicle_id,
             'vehicle_label' => $order->vehicle->label(),
         ];
     }

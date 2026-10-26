@@ -420,12 +420,41 @@ export const fr = {
         },
         emptyTitle: 'Aucune prestation',
         emptyText: 'Enregistrez la première prestation du garage.',
+        noMatchTitle: 'Aucune prestation ne correspond',
+        noMatchText: 'Retirez un filtre ou élargissez la période.',
+        filters: {
+            open: 'Filtres',
+            title: 'Recherche avancée',
+            description:
+                'Les filtres se cumulent. Plusieurs types : au moins un des types cochés.',
+            client: 'Client (téléphone, nom ou prénom)',
+            wilaya: 'Wilaya',
+            allWilayas: 'Toutes les wilayas',
+            plate: 'Matricule ou châssis',
+            brand: 'Marque',
+            allBrands: 'Toutes les marques',
+            model: 'Modèle',
+            allModels: 'Tous les modèles',
+            year: 'Année du véhicule',
+            yearFrom: 'De',
+            yearTo: 'À',
+            period: 'Date de la prestation',
+            from: 'Du',
+            to: 'Au',
+            types: 'Types de prestation',
+            clear: 'Effacer les filtres',
+            apply: 'Afficher les résultats',
+        },
+        export: 'Exporter (Excel)',
+        exportShort: 'CSV',
         columns: {
             number: 'N°',
             client: 'Client',
             vehicle: 'Véhicule',
+            works: 'Travaux',
             total: 'Total',
             status: 'État',
+            invoice: 'Facture',
         },
         sections: {
             vehicle: 'Client et véhicule',
@@ -496,7 +525,27 @@ export const fr = {
         completedOn: (date: string) => `Terminée le ${date}`,
         km: (km: string) => `${km} km`,
         logbookEmpty: 'Aucune prestation pour l’instant.',
+        logbookFilter: 'Filtrer par type de travail',
+        logbookAll: (count: number) => `Tout (${count})`,
         newForVehicle: 'Nouvelle prestation',
+    },
+
+    search: {
+        title: 'Rechercher',
+        placeholder: 'Téléphone, nom, matricule, châssis, n° de facture…',
+        hint: 'Tapez au moins 2 caractères.',
+        empty: 'Aucun résultat.',
+        groups: {
+            clients: 'Clients',
+            vehicles: 'Véhicules',
+            invoices: 'Factures',
+            orders: 'Prestations',
+        },
+        advanced: (term: string) =>
+            term
+                ? `Rechercher « ${term} » dans les prestations`
+                : 'Recherche avancée des prestations',
+        keys: '↑ ↓ pour choisir, Entrée pour ouvrir, Échap pour fermer',
     },
 
     invoices: {

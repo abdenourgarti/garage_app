@@ -144,7 +144,8 @@ et le menu React masque les entrées non autorisées (prop partagée `auth.can`)
 
 - Barre globale (Ctrl+K / bouton loupe) : une requête qui cherche en parallèle clients (téléphone, nom, prénom), véhicules
   (matricule, châssis), factures (numéro) ; résultats groupés, 5 par groupe.
-- Recherche avancée des prestations : filtres du CDC M9, query string, export CSV.
+- Recherche avancée des prestations : panneau « Filtres » de la liste Prestations (`ServiceOrderFilters`, partagé avec l'export),
+  filtres du CDC M9 dans l'adresse, export CSV pour Excel (UTF-8 avec BOM, séparateur « ; », montants à virgule).
 - Index MariaDB sur les colonnes recherchées ; `LIKE 'terme%'` en priorité, `LIKE '%terme%'` en second ; normaliser le matricule
   et le téléphone (sans espaces ni tirets) dans des colonnes `*_normalized`.
 
@@ -165,7 +166,7 @@ et le menu React masque les entrées non autorisées (prop partagée `auth.can`)
 
 ## 12. Performance
 
-- Eager loading systématique (`with()`), `preventLazyLoading()` en local.
+- Eager loading systématique (`with()`), `preventLazyLoading()` hors production (local et tests).
 - Index : toutes les FK, `clients.phone_normalized`, `vehicles.plate_normalized`, `vehicles.vin`, `service_orders.date`,
   `invoices.number`, `payments.paid_at`, `expenses.spent_at`.
 - Objectif : écran < 2 s et recherche < 1 s sur 10 ans de données d'un garage.
@@ -175,5 +176,5 @@ et le menu React masque les entrées non autorisées (prop partagée `auth.can`)
 - `ReferenceDataSeeder` (toujours) : wilayas, énergies, marques et modèles courants en Algérie, types de prestations,
   catégories (dont catégories système de dépenses), modes de paiement, compte gérant initial.
 - `DemoSeeder` (dev uniquement, `php artisan db:seed --class=DemoSeeder`) : passe par les actions métier ; chaque partie ne s'ajoute
-  qu'une fois, on le relance après chaque phase. À ce jour : 14 clients, 16 véhicules, 26 prestations sur 3 mois, stock, achats,
-  factures et paiements (crédits, remise, annulation). À étoffer (12 mois) pour le tableau de bord.
+  qu'une fois, on le relance après chaque phase. Un an d'activité dans l'ordre des dates (graine fixe) : 30 clients, 50 véhicules,
+  200 prestations, factures et paiements (crédits, remises, une annulation), achats mensuels. L'historique exige une base sans prestation.

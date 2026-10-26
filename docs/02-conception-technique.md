@@ -132,6 +132,8 @@ et le menu React masque les entrées non autorisées (prop partagée `auth.can`)
 - **Bénéfice** = Entrées − Dépenses. Détail des dépenses par catégorie, des entrées par mode de paiement.
 - **Solde de caisse du jour** = entrées espèces du jour − dépenses espèces du jour (indicatif, sans clôture).
 - Périodes prêtes : aujourd'hui, cette semaine (lundi→dimanche), ce mois, cette année, intervalle libre.
+- `CashService` : `summary()`, `cashOfDay()`, `movements()` (UNION paiements + autres entrées + dépenses, avec le lien vers la source).
+  Dépenses manuelles (catégorie non système, sans source ni employé) et autres entrées : seules modifiables dans la Caisse.
 
 ## 8. Rappels de vidange (RG-15)
 

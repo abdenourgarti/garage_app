@@ -5,7 +5,9 @@ use App\Enums\PurchaseStatus;
 use App\Enums\ServiceOrderStatus;
 use App\Models\Article;
 use App\Models\Client;
+use App\Models\Expense;
 use App\Models\Invoice;
+use App\Models\OtherIncome;
 use App\Models\Payment;
 use App\Models\Purchase;
 use App\Models\SalaryPayment;
@@ -45,6 +47,10 @@ it('fills a coherent year of demo data, only once', function () {
     expect(SalaryPayment::count())->toBe(33)
         ->and(SalaryPayment::where('carried_in', '>', 0)->count())->toBe(1)
         ->and(SalaryPayment::where('period', now()->format('Y-m'))->exists())->toBeFalse();
+
+    // Caisse : un loyer par mois, des autres entrées.
+    expect(Expense::where('label', 'like', 'Loyer %')->count())->toBe(12)
+        ->and(OtherIncome::count())->toBeGreaterThan(2);
 
     $payments = Payment::count();
     $this->seed(DemoSeeder::class);

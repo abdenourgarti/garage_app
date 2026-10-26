@@ -15,7 +15,7 @@
 | 8 — Utilisateurs, sauvegardes, licence | ✅ Terminé | 26/10/2026 | Paramètres > Utilisateurs (créer, modifier, rôle, activer, mot de passe provisoire ; dernier gérant protégé), Paramètres > Sauvegardes (zip base + fichiers, copie D:/USB, 30 jours, planifiée toutes les heures si > 24 h, restauration en deux confirmations), licence hors ligne (identifiant machine, clé de 20 caractères, commande développeur). 163 Pest (dont sauvegarde/restauration réelles) + 13 JS, parcours navigateur. |
 | 9 — Packaging Windows | ⬜ À faire | | |
 | 10 — Employés et salaires | ✅ Terminé | 26/10/2026 | Salaire mensuel ou journalier, fiche employé par mois (travaux, avances, paies), avances en saisie rapide (dépense « Avances », supprimable avant la paie), paie du mois (base − avances − report = reste, une paie par mois, excédent reporté), bulletin A4/PDF. Gérant seulement. Données de démo : 11 mois de paie. 170 Pest + 14 JS, parcours navigateur. |
-| 11 — Caisse et bénéfice | ⬜ À faire | | |
+| 11 — Caisse et bénéfice | ✅ Terminé | 26/10/2026 | `CashService` (entrées = paiements non annulés + autres entrées, dépenses, bénéfice, détail par catégorie et par mode, espèces du jour), écran Caisse (période, 4 totaux, barres, mouvements filtrables avec lien vers la source), dépenses et autres entrées manuelles modifiables, export CSV. Gérant seulement. Démo : 12 mois de frais. 176 Pest + 14 JS, parcours navigateur. |
 | 12 — Tableau de bord | ⬜ À faire | | |
 | 13 — Rendez-vous | ⬜ À faire | | |
 | 14 — Bilan d'entretien et rappels | ⬜ À faire | | |
@@ -86,13 +86,15 @@
 - **Phase 10** — Avances supérieures au salaire : reste 0 DA, pas de dépense, l’excédent est repris le mois suivant (`salary_payments.carried_in`, affiché sur le bulletin). Pas d’annulation de paie (non demandée) ; une avance se supprime tant que la paie du mois n’est pas faite. Pas de prorata d’embauche en cours de mois.
 - **Phase 10** — Salaire journalier : jours travaillés proposés = jours où l’employé a une prestation dans le mois, modifiables avant de payer. Le mois à venir ne se paie pas ; une avance datée d’un mois déjà payé est refusée.
 
+- **Phase 11** — Caisse réservée au gérant (CDC ; point ouvert fermé). Les dépenses automatiques (achats, salaires, avances, pièces extérieures) et les paiements clients ne se modifient pas dans la Caisse : lien vers leur source. Les dépenses manuelles (catégories non système) et les autres entrées sont modifiables et supprimables.
+- **Phase 11** — Bornes de période dans le fuseau du garage : `paid_at` (date et heure) de `jour 00:00` à `lendemain 00:00` exclu ; dates simples (`spent_at`, `received_at`) incluses. Mouvements = une requête UNION paginée (50) ; pas de clôture de caisse, le solde espèces du jour est indicatif.
+
 ## Points ouverts
 
 - Licence : si PowerShell ne lit pas le numéro du disque, l’identifiant ne repose que sur le nom du PC (il n’est alors pas mis en cache et sera relu). À surveiller à l’installation (phase 9).
 
 - Mesure de rapidité sur 10 ans de données (objectif < 1 s) non faite : à mesurer sur une copie de base volumineuse avant la recette (phase 15).
 
-- Accès de l’employé à la caisse et au bénéfice : à confirmer avec le client avant la phase 11 (le CDC le réserve au gérant).
 - `public/favicon.ico` et `apple-touch-icon.png` sont encore ceux de Laravel (le `favicon.svg` est remplacé).
 
 - Annulation de facture : la prestation repasse « En cours » et les pièces sont réintégrées (à confirmer avec le client).

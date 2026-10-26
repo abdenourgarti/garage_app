@@ -48,6 +48,15 @@ class Expense extends Model
     }
 
     /**
+     * Saisie à la main dans la Caisse (loyer, électricité…) : seule modifiable. Achats, salaires, avances et pièces
+     * extérieures sont écrits par leurs actions.
+     */
+    public function isManual(): bool
+    {
+        return $this->source_type === null && $this->employee_id === null && $this->category->system_key === null;
+    }
+
+    /**
      * @return BelongsTo<PaymentMethod, $this>
      */
     public function paymentMethod(): BelongsTo

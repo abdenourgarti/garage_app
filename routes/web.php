@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\Admin\GarageSettingsController;
 use App\Http\Controllers\Admin\ReferenceController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\CashController;
 use App\Http\Controllers\Clients\ClientController;
 use App\Http\Controllers\Clients\LookupController;
 use App\Http\Controllers\Clients\VehicleController;
@@ -36,7 +37,17 @@ Route::middleware('auth')->group(function () {
     // shortcut: pages « Bientôt disponible » le temps que chaque module soit livré (phases 3 à 14).
     Route::inertia('appointments', 'coming-soon', ['title' => 'Rendez-vous'])->name('appointments.index');
 
-    Route::inertia('cash', 'coming-soon', ['title' => 'Caisse'])->middleware('can:manage-cash')->name('cash.index');
+    // Caisse (gérant).
+    Route::middleware('can:manage-cash')->group(function () {
+        Route::get('cash', [CashController::class, 'index'])->name('cash.index');
+        Route::get('cash/export', [CashController::class, 'export'])->name('cash.export');
+        Route::post('cash/expenses', [CashController::class, 'storeExpense'])->name('cash.expenses.store');
+        Route::put('cash/expenses/{expense}', [CashController::class, 'updateExpense'])->name('cash.expenses.update');
+        Route::delete('cash/expenses/{expense}', [CashController::class, 'destroyExpense'])->name('cash.expenses.destroy');
+        Route::post('cash/incomes', [CashController::class, 'storeIncome'])->name('cash.incomes.store');
+        Route::put('cash/incomes/{income}', [CashController::class, 'updateIncome'])->name('cash.incomes.update');
+        Route::delete('cash/incomes/{income}', [CashController::class, 'destroyIncome'])->name('cash.incomes.destroy');
+    });
     Route::middleware('can:manage-employees')->group(function () {
         Route::get('employees', [EmployeeController::class, 'index'])->name('employees.index');
         Route::get('employees/payroll', [PayrollController::class, 'index'])->name('payroll.index');

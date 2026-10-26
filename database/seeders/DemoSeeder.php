@@ -25,7 +25,10 @@ use App\Models\Brand;
 use App\Models\Client;
 use App\Models\Employee;
 use App\Models\Energy;
+use App\Models\Expense;
+use App\Models\ExpenseCategory;
 use App\Models\Invoice;
+use App\Models\OtherIncome;
 use App\Models\PaymentMethod;
 use App\Models\SalaryPayment;
 use App\Models\ServiceOrder;
@@ -88,6 +91,7 @@ class DemoSeeder extends Seeder
             $this->employees();
             $this->history();
             $this->payroll();
+            $this->cash();
         } finally {
             Carbon::setTestNow();
             mt_srand();
@@ -211,6 +215,55 @@ class DemoSeeder extends Seeder
         });
 
         $this->command->info('Employés : 3 mécaniciens.');
+    }
+
+    /**
+     * Dépenses courantes saisies à la main (loyer, électricité, eau, outillage, divers) et quelques autres entrées, sur 12 mois.
+     */
+    private function cash(): void
+    {
+        if (OtherIncome::exists()) {
+            return;
+        }
+
+        $category = fn (string $name) => ExpenseCategory::where('name', $name)->value('id');
+        $cash = PaymentMethod::where('is_cash', true)->value('id');
+        $cheque = PaymentMethod::where('name', 'Chèque')->value('id') ?? $cash;
+        $userId = Auth::id();
+        $expense = fn (string $name, string $label, int $amount, CarbonInterface $day, ?int $method = null) => Expense::create([
+            'expense_category_id' => $category($name), 'label' => $label, 'amount' => $amount, 'spent_at' => $day->toDateString(),
+            'payment_method_id' => $method ?? $cash, 'user_id' => $userId,
+        ]);
+
+        for ($ago = 11; $ago >= 0; $ago--) {
+            $month = today()->startOfMonth()->subMonths($ago);
+            $label = $month->locale('fr')->translatedFormat('F Y');
+
+            $expense('Loyer', "Loyer {$label}", 40000, $month);
+
+            if ($month->month % 2 === 0) {
+                $expense('Électricité', "Sonelgaz {$label}", mt_rand(7, 12) * 1000, $month->addDays(14), $cheque);
+                $expense('Eau', "SEAAL {$label}", mt_rand(15, 30) * 100, $month->addDays(16));
+            }
+
+            if (mt_rand(1, 3) === 1) {
+                $expense('Outillage', ['Clé dynamométrique', 'Jeu de douilles', 'Cric hydraulique', 'Extracteur de filtre'][mt_rand(0, 3)], mt_rand(3, 15) * 1000, $month->addDays(mt_rand(3, 25)));
+            }
+
+            $expense('Divers', 'Produits de nettoyage, chiffons', mt_rand(8, 25) * 100, $month->addDays(mt_rand(3, 25)));
+
+            if (mt_rand(1, 2) === 1) {
+                OtherIncome::create([
+                    'label' => ['Vente batterie d’occasion', 'Vente pneus d’occasion', 'Récupération huile usagée', 'Lavage véhicule'][mt_rand(0, 3)],
+                    'amount' => mt_rand(10, 60) * 100,
+                    'received_at' => $month->addDays(mt_rand(3, 25))->toDateString(),
+                    'payment_method_id' => $cash,
+                    'user_id' => $userId,
+                ]);
+            }
+        }
+
+        $this->command->info('Caisse : loyer, électricité, eau, outillage, divers et autres entrées sur 12 mois.');
     }
 
     /** Nom → [type de salaire, montant]. */

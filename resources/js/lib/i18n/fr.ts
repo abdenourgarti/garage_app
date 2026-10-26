@@ -532,6 +532,63 @@ export const fr = {
         newForVehicle: 'Nouvelle prestation',
     },
 
+    cash: {
+        title: 'Caisse',
+        description:
+            'Entrées encaissées − dépenses payées = bénéfice, pour la période choisie.',
+        addExpense: 'Dépense',
+        addIncome: 'Autre entrée',
+        export: 'Exporter (Excel)',
+        exportShort: 'CSV',
+        incomes: 'Entrées',
+        expenses: 'Dépenses',
+        profit: 'Bénéfice',
+        cashToday: 'Espèces du jour',
+        cashTodayHint: 'Entrées − dépenses en espèces aujourd’hui (indicatif).',
+        byCategory: 'Dépenses par catégorie',
+        byMethod: 'Entrées par mode de paiement',
+        nothing: 'Rien sur cette période.',
+        movements: 'Mouvements',
+        allKinds: 'Entrées et dépenses',
+        kinds: { income: 'Entrées', expense: 'Dépenses' },
+        allCategories: 'Toutes les catégories',
+        allMethods: 'Tous les modes',
+        emptyTitle: 'Aucun mouvement',
+        emptyText: 'Aucune entrée ni dépense sur cette période.',
+        columns: {
+            date: 'Date',
+            label: 'Libellé',
+            category: 'Catégorie',
+            method: 'Mode',
+            amount: 'Montant',
+        },
+        source: 'Voir la source',
+        auto: 'Automatique',
+        expenseTitle: 'Nouvelle dépense',
+        expenseEdit: 'Modifier la dépense',
+        incomeTitle: 'Nouvelle entrée',
+        incomeEdit: 'Modifier l’entrée',
+        incomeHint:
+            'Argent reçu hors factures : vente d’occasion, remboursement…',
+        expenseHint:
+            'Loyer, électricité, outillage… Les achats, salaires et avances s’ajoutent tout seuls.',
+        fields: {
+            category: 'Catégorie',
+            label: 'Libellé',
+            labelExpense: 'ex. Loyer octobre',
+            labelIncome: 'ex. Vente batterie d’occasion',
+            amount: 'Montant',
+            date: 'Date',
+            method: 'Mode de paiement',
+            notes: 'Remarque',
+        },
+        edit: 'Modifier',
+        delete: 'Supprimer',
+        deleteTitle: 'Supprimer ce mouvement ?',
+        deleteText:
+            'Il disparaît de la caisse et du bénéfice. La suppression est définitive.',
+    },
+
     users: {
         description:
             'Un compte par personne. Le gérant gère les comptes, les sauvegardes et la caisse.',

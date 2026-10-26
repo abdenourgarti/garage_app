@@ -58,6 +58,43 @@ class CashService
     }
 
     /**
+     * Entrées, dépenses et bénéfice de la période, en une requête.
+     *
+     * @return array{incomes: string, expenses: string, profit: string}
+     */
+    public function totals(CarbonInterface $from, CarbonInterface $to): array
+    {
+        $row = DB::query()->fromSub($this->flows($from, $to), 'flows')
+            ->selectRaw('coalesce(sum(income), 0) as incomes, coalesce(sum(expense), 0) as expenses')
+            ->first();
+
+        return self::totalsOf($row);
+    }
+
+    /**
+     * Entrées, dépenses et bénéfice mois par mois (mois sans mouvement à zéro), en une requête.
+     *
+     * @return list<array{month: string, incomes: string, expenses: string, profit: string}>
+     */
+    public function monthly(CarbonInterface $from, CarbonInterface $to): array
+    {
+        $rows = DB::query()->fromSub($this->flows($from, $to), 'flows')
+            ->selectRaw("date_format(day, '%Y-%m') as month, sum(income) as incomes, sum(expense) as expenses")
+            ->groupBy('month')
+            ->get()
+            ->keyBy('month');
+
+        $months = [];
+
+        for ($month = CarbonImmutable::parse($from)->startOfMonth(); $month->lte($to); $month = $month->addMonth()) {
+            $key = $month->format('Y-m');
+            $months[] = ['month' => $key, ...self::totalsOf($rows->get($key))];
+        }
+
+        return $months;
+    }
+
+    /**
      * Solde espèces du jour (indicatif) : entrées en espèces − dépenses en espèces.
      */
     public function cashOfDay(CarbonInterface $day): string
@@ -150,6 +187,27 @@ class CashService
             'editable' => (bool) $row->editable,
             'amount' => Decimal::add((string) $row->amount),
         ];
+    }
+
+    /**
+     * @return array{incomes: string, expenses: string, profit: string}
+     */
+    private static function totalsOf(?object $row): array
+    {
+        $incomes = Decimal::add((string) ($row->incomes ?? 0));
+        $expenses = Decimal::add((string) ($row->expenses ?? 0));
+
+        return ['incomes' => $incomes, 'expenses' => $expenses, 'profit' => Decimal::sub($incomes, $expenses)];
+    }
+
+    /**
+     * Une ligne (day, income, expense) par mouvement de la période.
+     */
+    private function flows(CarbonInterface $from, CarbonInterface $to): Builder
+    {
+        return $this->payments($from, $to)->selectRaw('date(payments.paid_at) as day, payments.amount as income, 0 as expense')
+            ->unionAll($this->otherIncomes($from, $to)->selectRaw('other_incomes.received_at as day, other_incomes.amount as income, 0 as expense'))
+            ->unionAll($this->expenses($from, $to)->selectRaw('expenses.spent_at as day, 0 as income, expenses.amount as expense'));
     }
 
     /**

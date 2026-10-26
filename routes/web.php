@@ -9,6 +9,7 @@ use App\Http\Controllers\CashController;
 use App\Http\Controllers\Clients\ClientController;
 use App\Http\Controllers\Clients\LookupController;
 use App\Http\Controllers\Clients\VehicleController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\Invoices\InvoiceController;
 use App\Http\Controllers\Invoices\PaymentController;
@@ -31,7 +32,7 @@ Route::get('license', [LicenseController::class, 'show'])->name('license.show');
 Route::post('license', [LicenseController::class, 'activate'])->middleware('throttle:10,1')->name('license.activate');
 
 Route::middleware('auth')->group(function () {
-    Route::inertia('dashboard', 'dashboard')->name('dashboard');
+    Route::get('dashboard', DashboardController::class)->name('dashboard');
     Route::get('search', SearchController::class)->name('search');
 
     // shortcut: pages « Bientôt disponible » le temps que chaque module soit livré (phases 3 à 14).

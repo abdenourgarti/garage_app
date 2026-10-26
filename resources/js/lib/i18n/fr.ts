@@ -890,8 +890,43 @@ export const fr = {
     dashboard: {
         title: 'Accueil',
         greeting: (name: string) => `Bonjour ${name}`,
-        description:
-            'Le tableau de bord arrive avec les prestations et la caisse.',
+        incomes: 'Entrées du jour',
+        expenses: 'Dépenses du jour',
+        profit: 'Bénéfice du jour',
+        ordersToday: 'Prestations du jour',
+        inProgressCount: 'Véhicules en cours',
+        inProgress: 'Véhicules en cours',
+        inProgressEmpty: 'Aucun véhicule à l’atelier.',
+        since: (date: string) => `depuis le ${date}`,
+        today: 'aujourd’hui',
+        months: '12 derniers mois',
+        monthsHint: 'Entrées et dépenses par mois, bénéfice en ligne.',
+        monthsTable: 'Détail des 12 derniers mois',
+        month: 'Mois',
+        alerts: 'À surveiller',
+        alertsEmpty: 'Rien à signaler.',
+        lowStock: (count: number) =>
+            count === 1
+                ? '1 article en stock bas'
+                : `${count} articles en stock bas`,
+        seeStock: 'Voir le stock',
+        credits: (clients: number) =>
+            clients === 1
+                ? '1 client doit de l’argent'
+                : `${clients} clients doivent de l’argent`,
+        seeCredits: 'Voir les crédits',
+        rankings: 'Classements des 12 derniers mois',
+        rankingTabs: {
+            services: 'Prestations',
+            oils: 'Huiles',
+            parts: 'Pièces',
+            mechanics: 'Mécaniciens',
+        },
+        rankingEmpty: 'Pas encore de prestation terminée.',
+        times: (count: number) => (count === 1 ? '1 fois' : `${count} fois`),
+        cans: (count: number) => (count === 1 ? '1 bidon' : `${count} bidons`),
+        works: (count: number, orders: number) =>
+            `${count} travaux · ${orders} prestation${orders === 1 ? '' : 's'}`,
     },
 
     table: {

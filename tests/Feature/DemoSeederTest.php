@@ -35,6 +35,10 @@ it('fills a coherent year of demo data, only once', function () {
     Article::all()->each(fn (Article $article) => expect((float) $article->stock_qty)
         ->toEqual((float) StockMovement::where('article_id', $article->id)->sum('quantity')));
 
+    // Tableau de bord : quelque chose à surveiller.
+    expect(Article::active()->lowStock()->exists())->toBeTrue()
+        ->and(ServiceOrder::where('status', ServiceOrderStatus::InProgress)->whereDate('date', today())->count())->toBe(2);
+
     // Une facture par prestation terminée + une annulée, des crédits, jamais plus payé que le total.
     expect(Invoice::valid()->count())->toBe(198)
         ->and(Invoice::where('status', InvoiceStatus::Cancelled)->count())->toBe(1)

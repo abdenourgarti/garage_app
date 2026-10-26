@@ -16,7 +16,7 @@
 | 9 — Packaging Windows | ⬜ À faire | | |
 | 10 — Employés et salaires | ✅ Terminé | 26/10/2026 | Salaire mensuel ou journalier, fiche employé par mois (travaux, avances, paies), avances en saisie rapide (dépense « Avances », supprimable avant la paie), paie du mois (base − avances − report = reste, une paie par mois, excédent reporté), bulletin A4/PDF. Gérant seulement. Données de démo : 11 mois de paie. 170 Pest + 14 JS, parcours navigateur. |
 | 11 — Caisse et bénéfice | ✅ Terminé | 26/10/2026 | `CashService` (entrées = paiements non annulés + autres entrées, dépenses, bénéfice, détail par catégorie et par mode, espèces du jour), écran Caisse (période, 4 totaux, barres, mouvements filtrables avec lien vers la source), dépenses et autres entrées manuelles modifiables, export CSV. Gérant seulement. Démo : 12 mois de frais. 176 Pest + 14 JS, parcours navigateur. |
-| 12 — Tableau de bord | ⬜ À faire | | |
+| 12 — Tableau de bord | ✅ Terminé | 26/10/2026 | Accueil : indicateurs du jour (entrées, dépenses, bénéfice pour le gérant ; prestations du jour), véhicules en cours, « À surveiller » (stock bas, crédits clients), graphique 12 mois (shadcn chart + Recharts), classements 12 mois (prestations, huiles en litres et bidons, pièces, mécaniciens). `DashboardService` : une requête agrégée par bloc, cache 60 s vidé à chaque mouvement. L'employé ne reçoit aucun montant (`money: null`). 181 Pest + 14 JS, vérifié à 360/768/1280 px. |
 | 13 — Rendez-vous | ⬜ À faire | | |
 | 14 — Bilan d'entretien et rappels | ⬜ À faire | | |
 | 15 — Audit final et recette | ⬜ À faire | | |
@@ -88,6 +88,9 @@
 
 - **Phase 11** — Caisse réservée au gérant (CDC ; point ouvert fermé). Les dépenses automatiques (achats, salaires, avances, pièces extérieures) et les paiements clients ne se modifient pas dans la Caisse : lien vers leur source. Les dépenses manuelles (catégories non système) et les autres entrées sont modifiables et supprimables.
 - **Phase 11** — Bornes de période dans le fuseau du garage : `paid_at` (date et heure) de `jour 00:00` à `lendemain 00:00` exclu ; dates simples (`spent_at`, `received_at`) incluses. Mouvements = une requête UNION paginée (50) ; pas de clôture de caisse, le solde espèces du jour est indicatif.
+- **Phase 12** — Nouvelle dépendance `recharts` (requise par le composant `chart` de shadcn/ui, demandé pour le graphique) : embarquée dans le build, chargée seulement sur l'accueil (≈ 108 Ko gzip), rien depuis internet.
+- **Phase 12** — Cache du tableau de bord (60 s, clé par jour) vidé après commit à chaque enregistrement ou suppression de paiement, dépense, autre entrée, facture, prestation, mouvement de stock ou article. Graphique et classements sur les 12 derniers mois (mois en cours compris) ; classements sur les prestations terminées, pièces et huiles sorties du stock uniquement.
+- **Phase 12** — Rendez-vous du jour et vidanges à échéance non affichés tant que les phases 13 et 14 ne sont pas faites. Couleurs du graphique (entrées `#1583A3`, dépenses `#D0740A`, bénéfice en ligne couleur du texte) vérifiées pour le daltonisme en clair et en sombre ; tableau des 12 mois lisible par lecteur d'écran.
 
 ## Points ouverts
 

@@ -28,7 +28,10 @@ export function StatCard({
     className,
 }: Props) {
     return (
-        <div className={cn('rounded-xl border bg-card p-4', className)}>
+        <div
+            data-slot="stat-card"
+            className={cn('rounded-xl border bg-card p-4', className)}
+        >
             <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
                 <span>{label}</span>
                 <Icon className="size-5" aria-hidden="true" />

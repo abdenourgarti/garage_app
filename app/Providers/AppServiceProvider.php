@@ -2,11 +2,18 @@
 
 namespace App\Providers;
 
+use App\Models\Article;
+use App\Models\Expense;
+use App\Models\Invoice;
+use App\Models\OtherIncome;
+use App\Models\Payment;
 use App\Models\Purchase;
 use App\Models\PurchasePayment;
 use App\Models\SalaryPayment;
 use App\Models\ServiceOrder;
+use App\Models\StockMovement;
 use App\Models\User;
+use App\Services\DashboardService;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -41,6 +48,13 @@ class AppServiceProvider extends ServiceProvider
             'service_order' => ServiceOrder::class,
             'salary_payment' => SalaryPayment::class,
         ]);
+
+        // Tableau de bord : chiffres recalculés dès qu'un mouvement change (après le commit, sinon un autre écran remettrait l'ancien chiffre en cache).
+        foreach ([Payment::class, Expense::class, OtherIncome::class, Invoice::class, ServiceOrder::class, StockMovement::class, Article::class] as $model) {
+            $forget = fn () => DB::afterCommit(fn () => DashboardService::forget());
+            $model::saved($forget);
+            $model::deleted($forget);
+        }
     }
 
     /**

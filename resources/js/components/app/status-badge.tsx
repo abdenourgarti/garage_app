@@ -20,6 +20,7 @@ const tones: { [T in StatusType]: Record<keyof Statuses[T], Tone> } = {
         annulee: 'muted',
     },
     appointment: { prevu: 'primary', effectue: 'success', annule: 'muted' },
+    reminder: { ok: 'success', soon: 'warning', overdue: 'destructive' },
     stock: { ok: 'success', bas: 'warning', rupture: 'destructive' },
     purchase: {
         draft: 'muted',

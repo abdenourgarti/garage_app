@@ -137,10 +137,16 @@ et le menu React masque les entrées non autorisées (prop partagée `auth.can`)
 
 ## 8. Rappels de vidange (RG-15)
 
-- Pour chaque véhicule, dernière ligne de prestation terminée dont le type a `reminder_km` → `next_due_km = mileage + reminder_km`.
-- Kilométrage estimé aujourd'hui = dernier km + (km/jour moyen entre les deux dernières prestations avec km) × jours écoulés ; si une seule prestation : dernier km connu.
-- Le véhicule apparaît dans « Rappels » quand `estimé ≥ next_due_km − seuil` (paramètre `reminder_threshold_km`, défaut 1 000 km).
-- Calcul à la volée (requête + calcul PHP), pas de tâche planifiée nécessaire.
+- `ReminderService` : pour chaque véhicule et **chaque type ayant `reminder_km`** (vidange moteur, boîte, distribution…),
+  dernière prestation terminée avec km contenant ce type → `next_due_km = mileage + reminder_km` (phase 14 : une échéance
+  par type, sinon une distribution faite après une vidange masquait la vidange suivante). La plus proche sert au tri.
+- Kilométrage estimé aujourd'hui = dernier km + (km/jour moyen entre les deux dernières prestations avec km) × jours écoulés ;
+  si une seule prestation : dernier km connu ; aucune : `vehicles.last_mileage`. Même jour ou compteur qui recule : dernier km.
+- Statut : Dépassée si `estimé ≥ next_due_km`, Bientôt si `estimé ≥ next_due_km − seuil` (paramètre `reminder_threshold_km`,
+  défaut 1 000 km), sinon OK. Le véhicule (actif) apparaît dans « Rappels » dès Bientôt.
+- « Marquer comme appelé » : `vehicles.last_reminder_call_at` ; le véhicule passe dans « Déjà appelés » tant qu'aucune nouvelle
+  prestation n'a repoussé son échéance la plus urgente.
+- Calcul à la volée (2 requêtes avec `ROW_NUMBER()` + calcul PHP), pas de tâche planifiée nécessaire.
 
 ## 9. Recherche
 

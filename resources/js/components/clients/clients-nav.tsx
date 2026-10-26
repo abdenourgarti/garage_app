@@ -2,16 +2,26 @@ import { Link } from '@inertiajs/react';
 import { fr } from '@/lib/i18n/fr';
 import { cn } from '@/lib/utils';
 import { index as clientsIndex } from '@/routes/clients';
+import { index as remindersIndex } from '@/routes/reminders';
 import { index as vehiclesIndex } from '@/routes/vehicles';
 
-/** Bascule Clients / Véhicules en tête des deux listes. */
-export function ClientsNav({ current }: { current: 'clients' | 'vehicles' }) {
+/** Onglets Clients / Véhicules / Rappels en tête des trois listes. */
+export function ClientsNav({
+    current,
+}: {
+    current: 'clients' | 'vehicles' | 'reminders';
+}) {
     const items = [
         { key: 'clients', title: fr.clients.tabClients, href: clientsIndex() },
         {
             key: 'vehicles',
             title: fr.clients.tabVehicles,
             href: vehiclesIndex(),
+        },
+        {
+            key: 'reminders',
+            title: fr.clients.tabReminders,
+            href: remindersIndex(),
         },
     ] as const;
 

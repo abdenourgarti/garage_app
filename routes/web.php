@@ -9,6 +9,8 @@ use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\CashController;
 use App\Http\Controllers\Clients\ClientController;
 use App\Http\Controllers\Clients\LookupController;
+use App\Http\Controllers\Clients\MaintenanceReportController;
+use App\Http\Controllers\Clients\ReminderController;
 use App\Http\Controllers\Clients\VehicleController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmployeeController;
@@ -97,6 +99,10 @@ Route::middleware('auth')->group(function () {
     Route::post('clients/{client}/vehicles', [VehicleController::class, 'store'])->name('vehicles.store');
 
     Route::get('vehicles', [VehicleController::class, 'index'])->name('vehicles.index');
+    Route::get('reminders', [ReminderController::class, 'index'])->name('reminders.index');
+    Route::post('vehicles/{vehicle}/reminder-call', [ReminderController::class, 'call'])->name('reminders.call');
+    Route::get('vehicles/{vehicle}/report', [MaintenanceReportController::class, 'show'])->name('vehicles.report');
+    Route::get('vehicles/{vehicle}/report/{format}', [MaintenanceReportController::class, 'document'])->whereIn('format', ['a4', 'pdf'])->name('vehicles.report.document');
     Route::get('vehicles/{vehicle}', [VehicleController::class, 'show'])->name('vehicles.show');
     Route::put('vehicles/{vehicle}', [VehicleController::class, 'update'])->name('vehicles.update');
     Route::patch('vehicles/{vehicle}/toggle', [VehicleController::class, 'toggle'])->name('vehicles.toggle');

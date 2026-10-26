@@ -13,6 +13,7 @@ use App\Models\Client;
 use App\Models\ServiceOrder;
 use App\Models\Vehicle;
 use App\Models\VehicleOwnership;
+use App\Services\ReminderService;
 use App\Support\FormOptions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -51,7 +52,7 @@ class VehicleController extends Controller
         ]);
     }
 
-    public function show(Vehicle $vehicle): Response
+    public function show(Vehicle $vehicle, ReminderService $reminders): Response
     {
         $vehicle->load([
             'brand:id,name', 'vehicleModel:id,name', 'energy:id,name',
@@ -74,6 +75,7 @@ class VehicleController extends Controller
                     'ended_at' => $ownership->ended_at?->toDateString(),
                 ]),
             ],
+            'reminder' => $reminders->forVehicles([$vehicle->id])->get($vehicle->id),
             'serviceOrders' => ServiceOrderController::history(ServiceOrder::where('vehicle_id', $vehicle->id)),
             'options' => FormOptions::clientVehicle(),
         ]);

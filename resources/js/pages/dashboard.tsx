@@ -8,6 +8,7 @@ import {
     ChevronRight,
     CircleCheck,
     HandCoins,
+    Droplets,
     PackageMinus,
     Scale,
     Wrench,
@@ -19,6 +20,7 @@ import { StatCard } from '@/components/app/stat-card';
 import { StatusBadge } from '@/components/app/status-badge';
 import { MonthsChart } from '@/components/dashboard/months-chart';
 import type { MonthTotals } from '@/components/dashboard/months-chart';
+import { remainingLabel } from '@/components/clients/next-oil-change';
 import { RankingsPanel } from '@/components/dashboard/rankings';
 import type { Rankings } from '@/components/dashboard/rankings';
 import { duration, ease, prefersReducedMotion } from '@/lib/animations';
@@ -33,8 +35,10 @@ import { cn } from '@/lib/utils';
 import { credits as creditsIndex } from '@/routes/invoices';
 import { index as appointmentsIndex } from '@/routes/appointments';
 import { show as showOrder } from '@/routes/service-orders';
+import { index as remindersIndex } from '@/routes/reminders';
 import { index as stockIndex } from '@/routes/stock';
 import type { Appointment } from '@/types/appointments';
+import type { ReminderRow } from '@/types/reminders';
 
 gsap.registerPlugin(useGSAP);
 
@@ -52,6 +56,8 @@ type Props = {
         client: string;
     }[];
     lowStock: { id: number; name: string; stock: string; unit: string }[];
+    dueOilChanges: ReminderRow[];
+    dueOilChangesCount: number;
     rankings: Rankings;
     /** Gérant seulement : l'employé reçoit null. */
     money: {
@@ -95,6 +101,8 @@ export default function Dashboard({
     appointmentsToday,
     inProgress,
     lowStock,
+    dueOilChanges,
+    dueOilChangesCount,
     rankings,
     money,
 }: Props) {
@@ -117,7 +125,10 @@ export default function Dashboard({
         { scope: page },
     );
 
-    const alerts = lowStock.length > 0 || (money?.credits.clients ?? 0) > 0;
+    const alerts =
+        lowStock.length > 0 ||
+        dueOilChanges.length > 0 ||
+        (money?.credits.clients ?? 0) > 0;
 
     return (
         <>
@@ -307,6 +318,52 @@ export default function Dashboard({
                                             className="mt-1 inline-flex min-h-11 items-center text-sm font-medium text-primary underline-offset-4 hover:underline"
                                         >
                                             {t.seeStock}
+                                        </Link>
+                                    </div>
+                                )}
+                                {dueOilChanges.length > 0 && (
+                                    <div>
+                                        <p className="flex items-center gap-2 font-medium text-warning">
+                                            <Droplets
+                                                className="size-4"
+                                                aria-hidden="true"
+                                            />
+                                            {t.dueOilChanges(
+                                                dueOilChangesCount,
+                                            )}
+                                        </p>
+                                        <ul className="mt-2 space-y-1 text-sm">
+                                            {dueOilChanges.map((reminder) => (
+                                                <li
+                                                    key={reminder.id}
+                                                    className="flex gap-2"
+                                                >
+                                                    <span className="min-w-0 flex-1 truncate">
+                                                        <span className="font-mono font-semibold">
+                                                            {reminder.plate}
+                                                        </span>{' '}
+                                                        · {reminder.client}
+                                                    </span>
+                                                    <span
+                                                        className={cn(
+                                                            'shrink-0',
+                                                            reminder.status ===
+                                                                'overdue' &&
+                                                                'text-destructive',
+                                                        )}
+                                                    >
+                                                        {remainingLabel(
+                                                            reminder.remaining_km,
+                                                        )}
+                                                    </span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                        <Link
+                                            href={remindersIndex()}
+                                            className="mt-1 inline-flex min-h-11 items-center text-sm font-medium text-primary underline-offset-4 hover:underline"
+                                        >
+                                            {t.seeReminders}
                                         </Link>
                                     </div>
                                 )}

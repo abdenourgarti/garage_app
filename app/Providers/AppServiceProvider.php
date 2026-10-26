@@ -14,6 +14,7 @@ use App\Models\SalaryPayment;
 use App\Models\ServiceOrder;
 use App\Models\StockMovement;
 use App\Models\User;
+use App\Models\Vehicle;
 use App\Services\DashboardService;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
@@ -51,7 +52,7 @@ class AppServiceProvider extends ServiceProvider
         ]);
 
         // Tableau de bord : chiffres recalculés dès qu'un mouvement change (après le commit, sinon un autre écran remettrait l'ancien chiffre en cache).
-        foreach ([Appointment::class, Payment::class, Expense::class, OtherIncome::class, Invoice::class, ServiceOrder::class, StockMovement::class, Article::class] as $model) {
+        foreach ([Appointment::class, Payment::class, Expense::class, OtherIncome::class, Invoice::class, ServiceOrder::class, StockMovement::class, Article::class, Vehicle::class] as $model) {
             $forget = fn () => DB::afterCommit(fn () => DashboardService::forget());
             $model::saved($forget);
             $model::deleted($forget);

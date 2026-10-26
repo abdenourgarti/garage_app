@@ -16,6 +16,7 @@ use App\Models\SalaryPayment;
 use App\Models\ServiceOrder;
 use App\Models\StockMovement;
 use App\Models\Vehicle;
+use App\Services\ReminderService;
 use Database\Seeders\DemoSeeder;
 use Database\Seeders\ReferenceDataSeeder;
 
@@ -47,6 +48,11 @@ it('fills a coherent year of demo data, only once', function () {
         ->and(Appointment::where('status', AppointmentStatus::Done)->whereNull('service_order_id')->count())->toBe(0)
         ->and(Appointment::where('status', AppointmentStatus::Done)->whereDate('scheduled_at', today())->count())->toBe(1)
         ->and(Appointment::where('status', AppointmentStatus::Cancelled)->count())->toBe(4);
+
+    // Rappels : des entretiens à échéance, dont un déjà appelé.
+    $reminders = collect(app(ReminderService::class)->toCall());
+    expect($reminders->where('called', false)->count())->toBeGreaterThan(0)
+        ->and($reminders->where('called', true)->count())->toBe(1);
 
     // Une facture par prestation terminée + une annulée, des crédits, jamais plus payé que le total.
     expect(Invoice::valid()->count())->toBe(198)

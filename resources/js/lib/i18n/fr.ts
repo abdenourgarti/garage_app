@@ -18,10 +18,6 @@ export const fr = {
         required: 'obligatoire',
         moreInfo: "Plus d'informations",
         noResult: 'Aucun résultat.',
-        comingSoon: 'Bientôt disponible',
-        comingSoonText:
-            'Cet écran arrive dans une prochaine version. Le menu est déjà prêt.',
-        backToHome: "Retour à l'accueil",
     },
 
     nav: {
@@ -113,6 +109,7 @@ export const fr = {
             'Retrouvez un client par son téléphone, son nom ou un matricule.',
         tabClients: 'Clients',
         tabVehicles: 'Véhicules',
+        tabReminders: 'Rappels',
         newClient: 'Nouveau client',
         searchClients: 'Téléphone, nom, prénom ou matricule…',
         searchVehicles: 'Matricule, châssis, marque, modèle ou propriétaire…',
@@ -206,14 +203,14 @@ export const fr = {
             to ? `Du ${from} au ${to}` : `Depuis le ${from}`,
         current: 'Actuel',
         nextOilChange: 'Prochaine vidange',
-        nextOilChangeText:
-            'Calculée à partir des vidanges enregistrées dans les prestations.',
+        noReminder:
+            'Pas encore de vidange avec kilométrage enregistrée pour ce véhicule.',
+        estimatedKm: (km: string) => `${km} estimés aujourd’hui`,
+        dueAt: (km: string) => `à ${km}`,
+        remaining: (km: string) => `reste ~${km}`,
+        overdueBy: (km: string) => `dépassée de ~${km}`,
+        report: 'Bilan d’entretien',
         logbook: 'Carnet d’entretien',
-        logbookText:
-            'Les prestations et les kilométrages relevés apparaîtront ici, de la plus récente à la plus ancienne.',
-        documents: 'Documents',
-        documentsText:
-            'Bilan d’entretien à imprimer ou en PDF (avec ou sans les prix).',
         deactivateTitle: 'Désactiver ce véhicule ?',
         deactivateText:
             'Il n’apparaîtra plus dans les recherches des nouvelles prestations. Son carnet est conservé et vous pourrez le réactiver.',
@@ -887,6 +884,37 @@ export const fr = {
         themes: { light: 'Clair', dark: 'Sombre', system: 'Comme l’appareil' },
     },
 
+    reminders: {
+        title: 'Rappels de vidange',
+        description: (threshold: string) =>
+            `Véhicules dont l’entretien est dépassé ou à moins de ${threshold}, les plus urgents d’abord.`,
+        emptyTitle: 'Personne à appeler',
+        emptyText: 'Aucun entretien n’arrive à échéance pour le moment.',
+        called: 'Déjà appelés',
+        calledOn: (date: string) => `Appelé le ${date}`,
+        call: 'Appeler',
+        markCalled: 'Marquer comme appelé',
+        estimated: 'Estimé',
+        columns: {
+            vehicle: 'Véhicule',
+            client: 'Client',
+            due: 'Entretien',
+            remaining: 'Reste',
+        },
+    },
+
+    report: {
+        title: 'Bilan d’entretien',
+        description:
+            'Toutes les prestations du véhicule, à imprimer ou à envoyer en PDF.',
+        withoutPrices: 'Sans les prix',
+        withoutPricesHint:
+            'Pour une vente du véhicule : seuls les travaux, pièces et kilométrages apparaissent.',
+        print: 'Imprimer',
+        pdf: 'PDF',
+        back: 'Retour au véhicule',
+    },
+
     appointments: {
         title: 'Rendez-vous',
         description:
@@ -954,6 +982,11 @@ export const fr = {
                 ? '1 article en stock bas'
                 : `${count} articles en stock bas`,
         seeStock: 'Voir le stock',
+        dueOilChanges: (count: number) =>
+            count === 1
+                ? '1 entretien à échéance'
+                : `${count} entretiens à échéance`,
+        seeReminders: 'Voir les rappels',
         credits: (clients: number) =>
             clients === 1
                 ? '1 client doit de l’argent'
@@ -1012,6 +1045,7 @@ export const fr = {
             annulee: 'Annulée',
         },
         appointment: { prevu: 'Prévu', effectue: 'Effectué', annule: 'Annulé' },
+        reminder: { ok: 'OK', soon: 'Bientôt', overdue: 'Dépassée' },
         stock: { ok: 'En stock', bas: 'Stock bas', rupture: 'Rupture' },
         purchase: {
             draft: 'Brouillon',

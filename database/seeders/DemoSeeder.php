@@ -40,6 +40,7 @@ use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleModel;
 use App\Models\Wilaya;
+use App\Services\ReminderService;
 use App\Support\Decimal;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Seeder;
@@ -95,6 +96,7 @@ class DemoSeeder extends Seeder
             $this->payroll();
             $this->cash();
             $this->appointments();
+            $this->reminderCalls();
         } finally {
             Carbon::setTestNow();
             mt_srand();
@@ -282,6 +284,20 @@ class DemoSeeder extends Seeder
             $vehicle = $vehicles[mt_rand(0, $vehicles->count() - 1)];
             $book($vehicle->client_id, $vehicle->id, $randomTime($day), AppointmentStatus::Planned, $randomTypes(), $notes[mt_rand(0, count($notes) - 1)]);
             $booked++;
+        }
+    }
+
+    /**
+     * Rappels de vidange : le véhicule le plus urgent a déjà été appelé avant-hier.
+     */
+    private function reminderCalls(): void
+    {
+        if (Vehicle::whereNotNull('last_reminder_call_at')->exists()) {
+            return;
+        }
+
+        foreach (array_slice(app(ReminderService::class)->toCall(), 0, 1) as $reminder) {
+            Vehicle::whereKey($reminder['id'])->update(['last_reminder_call_at' => today()->subDays(2)->setTime(10, 15)]);
         }
     }
 

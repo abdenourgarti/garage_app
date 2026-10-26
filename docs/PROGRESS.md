@@ -18,7 +18,7 @@
 | 11 — Caisse et bénéfice | ✅ Terminé | 26/10/2026 | `CashService` (entrées = paiements non annulés + autres entrées, dépenses, bénéfice, détail par catégorie et par mode, espèces du jour), écran Caisse (période, 4 totaux, barres, mouvements filtrables avec lien vers la source), dépenses et autres entrées manuelles modifiables, export CSV. Gérant seulement. Démo : 12 mois de frais. 176 Pest + 14 JS, parcours navigateur. |
 | 12 — Tableau de bord | ✅ Terminé | 26/10/2026 | Accueil : indicateurs du jour (entrées, dépenses, bénéfice pour le gérant ; prestations du jour), véhicules en cours, « À surveiller » (stock bas, crédits clients), graphique 12 mois (shadcn chart + Recharts), classements 12 mois (prestations, huiles en litres et bidons, pièces, mécaniciens). `DashboardService` : une requête agrégée par bloc, cache 60 s vidé à chaque mouvement. L'employé ne reçoit aucun montant (`money: null`). 181 Pest + 14 JS, vérifié à 360/768/1280 px. |
 | 13 — Rendez-vous | ✅ Terminé | 26/10/2026 | Écran Rendez-vous : jour (par défaut), semaine (lundi → dimanche), mois en grille ; création rapide (client avec création sur place, véhicule facultatif, date, heure, prestations prévues en boutons, remarque) ; appel en un toucher. `StartAppointment` : prestation du jour pré-remplie (une ligne par prestation prévue, prix proposé), RDV Effectué, ouverture de la prestation pour le km et les pièces ; Annuler (client absent). Bloc « Rendez-vous du jour » sur l'accueil. 188 Pest + 14 JS, parcours navigateur, 360/768/1280 px. |
-| 14 — Bilan d'entretien et rappels | ⬜ À faire | | |
+| 14 — Bilan d'entretien et rappels | ✅ Terminé | 26/10/2026 | `ReminderService` (échéance par type à rappel, km estimé à partir des deux derniers relevés, OK / Bientôt / Dépassée selon le seuil). Fiche véhicule : bloc « Prochaine vidange » et bouton « Bilan d'entretien ». Onglet Rappels (Clients et véhicules) : les plus urgents d'abord, appel en un toucher, « Marquer comme appelé » (`vehicles.last_reminder_call_at`), section « Déjà appelés ». Bilan d'entretien A4 / PDF, chronologie complète (km, travaux, pièces, huiles avec marque, viscosité et format, conseils), option « Sans les prix » (S9). Accueil : « entretiens à échéance ». 194 Pest + 14 JS, parcours navigateur, 360/768/1280 px. |
 | 15 — Audit final et recette | ⬜ À faire | | |
 
 ## Décisions prises en cours de route
@@ -94,8 +94,12 @@
 - **Phase 13** — Prestations prévues d'un RDV = table de liaison `appointment_service_type` vers les types (au lieu du texte `planned_services` de 03 §10, mis à jour) : « Commencer » crée les lignes au prix proposé, et un type utilisé ne peut pas être supprimé. Le texte libre reste dans « Remarque ».
 - **Phase 13** — Vue mois = grille CSS maison (7 colonnes, nombre de RDV par jour) au lieu du `Calendar` de shadcn/ui : évite `react-day-picker` + `date-fns` (décision de la phase 1). Semaine du lundi au dimanche, comme la Caisse.
 - **Phase 13** — Transitions : Prévu → Effectué (seulement par « Commencer », RDV verrouillé : jamais deux prestations) ou → Annulé ; Effectué et Annulé sont définitifs. « Commencer » sans véhicule ouvre le RDV pour le choisir. Supprimer la prestation commencée remet le RDV à Prévu. Accessible à l'employé.
+- **Phase 14** — Une échéance **par type** à rappel au lieu de « la dernière ligne avec rappel » (02 §8 mis à jour) : une distribution faite après une vidange ne masque plus la vidange suivante. Rappels en 3ᵉ onglet de « Clients et véhicules » (pas de nouvelle entrée de menu). Un véhicule appelé reste dans « Déjà appelés » jusqu'à une prestation qui repousse son échéance.
+- **Phase 14** — Pas de Lenis sur l'aperçu du bilan : c'est un cadre (iframe) à la hauteur du document, le défilement natif suffit. Le bilan sans prix garde le nom du propriétaire et les kilométrages ; il masque montants et totaux.
 
 ## Points ouverts
+
+- Seuil de rappel : la base de développement a `reminder_threshold_km = 10 000` (saisi dans Paramètres le 22/10), égal à l'intervalle de vidange : tout véhicule est « Bientôt » juste après sa vidange. Valeur conseillée : 1 000 à 2 000 km (à régler chez le client).
 
 - Licence : si PowerShell ne lit pas le numéro du disque, l’identifiant ne repose que sur le nom du PC (il n’est alors pas mis en cache et sera relu). À surveiller à l’installation (phase 9).
 

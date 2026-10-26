@@ -1,7 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import {
     ArrowLeftRight,
-    Droplets,
     FileText,
     Pencil,
     Phone,
@@ -12,6 +11,8 @@ import { useState } from 'react';
 import VehicleController from '@/actions/App/Http/Controllers/Clients/VehicleController';
 import { ConfirmDialog } from '@/components/app/confirm-dialog';
 import { Plate } from '@/components/app/plate';
+import { NextOilChange } from '@/components/clients/next-oil-change';
+import type { VehicleReminder } from '@/components/clients/next-oil-change';
 import { TransferSheet } from '@/components/clients/transfer-sheet';
 import { VehicleFormSheet } from '@/components/clients/vehicle-form-sheet';
 import { OrderHistory } from '@/components/service-orders/order-history';
@@ -21,6 +22,7 @@ import { formatDate, formatQuantity } from '@/lib/format';
 import { fr } from '@/lib/i18n/fr';
 import { show as showClient } from '@/routes/clients';
 import { create as createOrder } from '@/routes/service-orders';
+import { report as vehicleReport } from '@/routes/vehicles';
 import type { ClientVehicleOptions } from '@/types/clients';
 
 type Person = { id: number; full_name: string; phone: string };
@@ -49,6 +51,7 @@ type Props = {
             ended_at: string | null;
         }[];
     };
+    reminder: VehicleReminder;
     serviceOrders: HistoryRow[];
     options: ClientVehicleOptions;
 };
@@ -87,6 +90,7 @@ function Section({
 
 export default function VehicleShow({
     vehicle,
+    reminder,
     serviceOrders,
     options,
 }: Props) {
@@ -155,6 +159,12 @@ export default function VehicleShow({
                         >
                             <Pencil />
                             {fr.clients.edit}
+                        </Button>
+                        <Button asChild variant="outline" className="h-11">
+                            <Link href={vehicleReport(vehicle.id)}>
+                                <FileText />
+                                {t.report}
+                            </Link>
                         </Button>
                         <Button
                             variant="outline"
@@ -249,20 +259,7 @@ export default function VehicleShow({
                         </Section>
 
                         <Section title={t.nextOilChange}>
-                            <div className="flex items-start gap-3 rounded-xl border border-dashed p-4 text-sm">
-                                <Droplets
-                                    className="mt-0.5 size-5 shrink-0 text-highlight"
-                                    aria-hidden="true"
-                                />
-                                <div>
-                                    <p className="font-medium">
-                                        {fr.common.comingSoon}
-                                    </p>
-                                    <p className="text-muted-foreground">
-                                        {t.nextOilChangeText}
-                                    </p>
-                                </div>
-                            </div>
+                            <NextOilChange reminder={reminder} />
                         </Section>
 
                         <Section title={t.ownersHistory}>
@@ -302,23 +299,6 @@ export default function VehicleShow({
                                     </li>
                                 ))}
                             </ol>
-                        </Section>
-
-                        <Section title={t.documents}>
-                            <div className="flex items-start gap-3 rounded-xl border border-dashed p-4 text-sm">
-                                <FileText
-                                    className="mt-0.5 size-5 shrink-0 text-muted-foreground"
-                                    aria-hidden="true"
-                                />
-                                <div>
-                                    <p className="font-medium">
-                                        {fr.common.comingSoon}
-                                    </p>
-                                    <p className="text-muted-foreground">
-                                        {t.documentsText}
-                                    </p>
-                                </div>
-                            </div>
                         </Section>
                     </div>
                 </div>

@@ -25,7 +25,7 @@ class DashboardService
 
     private const RANKING_SIZE = 5;
 
-    public function __construct(private CashService $cash) {}
+    public function __construct(private CashService $cash, private ReminderService $reminders) {}
 
     public static function forget(): void
     {
@@ -63,6 +63,7 @@ class DashboardService
             'appointmentsToday' => AppointmentController::list(CarbonImmutable::today(), CarbonImmutable::today()),
             'inProgress' => $this->inProgress(),
             'lowStock' => $this->lowStock(),
+            ...$this->dueOilChanges(),
             'rankings' => [
                 'services' => $this->topServices(),
                 'oils' => $this->topOils(),
@@ -70,6 +71,18 @@ class DashboardService
                 'mechanics' => $this->topMechanics(),
             ],
         ]);
+    }
+
+    /**
+     * Vidanges à échéance pas encore appelées : leur nombre et les 3 plus urgentes.
+     *
+     * @return array{dueOilChangesCount: int, dueOilChanges: list<array<string, mixed>>}
+     */
+    private function dueOilChanges(): array
+    {
+        $due = array_values(array_filter($this->reminders->toCall(), fn (array $reminder) => ! $reminder['called']));
+
+        return ['dueOilChangesCount' => count($due), 'dueOilChanges' => array_slice($due, 0, 3)];
     }
 
     /**

@@ -21,10 +21,14 @@ class SettingsService
 
     public const REMINDER_THRESHOLD_KM = 'reminder_threshold_km';
 
+    /** Dossier de copie des sauvegardes (D:\…, clé USB) ; vide = pas de copie. */
+    public const BACKUP_SECONDARY_PATH = 'backup_secondary_path';
+
     /**
      * @var array<string, string|null>
      */
     private const DEFAULTS = [
+        self::BACKUP_SECONDARY_PATH => null,
         self::GARAGE_NAME => null,
         self::GARAGE_ADDRESS => null,
         self::GARAGE_PHONE => null,

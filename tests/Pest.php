@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -17,6 +18,11 @@ use Tests\TestCase;
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->in('Feature');
+
+// Outils externes (mariadb-dump…) : ils ne voient que des données validées, donc pas de transaction de test.
+pest()->extend(TestCase::class)
+    ->use(DatabaseTruncation::class)
+    ->in('Integration');
 
 /*
 |--------------------------------------------------------------------------

@@ -4,8 +4,10 @@ import { PageHeader } from '@/components/app/page-header';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { fr } from '@/lib/i18n/fr';
 import { cn } from '@/lib/utils';
+import { index as backupsIndex } from '@/routes/admin/backups';
 import { edit as editGarage } from '@/routes/admin/garage';
 import { index as references } from '@/routes/admin/references';
+import { index as usersIndex } from '@/routes/admin/users';
 
 export default function AdminLayout({ children }: PropsWithChildren) {
     const { can } = usePage().props.auth;
@@ -18,6 +20,16 @@ export default function AdminLayout({ children }: PropsWithChildren) {
                       title: fr.admin.garage,
                       href: editGarage(),
                       match: editGarage(),
+                  },
+                  {
+                      title: fr.admin.users,
+                      href: usersIndex(),
+                      match: usersIndex(),
+                  },
+                  {
+                      title: fr.admin.backups,
+                      href: backupsIndex(),
+                      match: backupsIndex(),
                   },
               ]
             : []),
@@ -38,7 +50,7 @@ export default function AdminLayout({ children }: PropsWithChildren) {
             {items.length > 1 && (
                 <nav
                     aria-label={fr.admin.title}
-                    className="flex gap-1 border-b"
+                    className="flex gap-1 overflow-x-auto border-b"
                 >
                     {items.map((item) => (
                         <Link

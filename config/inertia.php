@@ -16,7 +16,8 @@ return [
     */
 
     'ssr' => [
-        'enabled' => true,
+        // Coupé dans les tests : sans serveur Vite lancé, chaque page attendrait 2 s une réponse SSR.
+        'enabled' => (bool) env('INERTIA_SSR_ENABLED', true),
         'url' => 'http://127.0.0.1:13714',
         // 'bundle' => base_path('bootstrap/ssr/ssr.mjs'),
 

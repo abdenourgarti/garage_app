@@ -12,7 +12,7 @@
 | 5 — Prestations | ✅ Terminé | 23/10/2026 | Écran « Nouvelle prestation » en sections (véhicule + création rapide, km, date, immobilisation, types fréquents en boutons, mécanicien par ligne, pièces Stock / Huile / Client / Extérieur, récapitulatif collant), numérotation PR-AAAA-00001 verrouillée, `SaveServiceOrder` + `CompleteServiceOrder` (sorties de stock à coût figé, dépense pièces extérieures, dernier km), liste filtrée, fiche, carnet sur la fiche véhicule et onglet client, mécaniciens (CRUD minimal). 132 Pest + 13 JS ; S1 = 20 clics, 8 champs. |
 | 6 — Factures et paiements | ✅ Terminé | 23/10/2026 | « Terminer et facturer » crée la facture FA-AAAA-00001 et mène à sa fiche (aperçu fidèle, Encaisser avec reste proposé, remise avant paiement, annulation gérant avec motif). Paiements partiels, crédit client (fiche client + liste « Crédits clients » par ancienneté). Facture et reçu en A4, ticket 80 mm et PDF (dompdf). Données de démonstration (`DemoSeeder`). 141 Pest + 13 JS, parcours navigateur complet. |
 | 7 — Recherche et historique | ✅ Terminé | 26/10/2026 | Recherche globale Ctrl+K (loupe plein écran sur mobile) : clients, véhicules, factures, prestations dès 2 caractères, clavier. Recherche avancée intégrée à la liste Prestations (tous les filtres M9, cumulables, dans l'adresse), colonnes travaux et facture, export CSV Excel (BOM, « ; »). Carnet en chronologie avec filtre par type et lien facture. Index vérifié par EXPLAIN, `preventLazyLoading`. `DemoSeeder` : 1 an, 30 clients, 50 véhicules, 200 prestations. 147 Pest + 13 JS, parcours navigateur. |
-| 8 — Utilisateurs, sauvegardes, licence | ⬜ À faire | | |
+| 8 — Utilisateurs, sauvegardes, licence | ✅ Terminé | 26/10/2026 | Paramètres > Utilisateurs (créer, modifier, rôle, activer, mot de passe provisoire ; dernier gérant protégé), Paramètres > Sauvegardes (zip base + fichiers, copie D:/USB, 30 jours, planifiée toutes les heures si > 24 h, restauration en deux confirmations), licence hors ligne (identifiant machine, clé de 20 caractères, commande développeur). 163 Pest (dont sauvegarde/restauration réelles) + 13 JS, parcours navigateur. |
 | 9 — Packaging Windows | ⬜ À faire | | |
 | 10 — Employés et salaires | ⬜ À faire | | |
 | 11 — Caisse et bénéfice | ⬜ À faire | | |
@@ -75,13 +75,20 @@
 - **Phase 7** — Index ajouté `service_order_lines(service_type_id, service_order_id)` (EXPLAIN : parcours complet → index couvrant) ; filtres de date sans `DATE()` pour utiliser l’index `service_orders.date`. `Model::preventLazyLoading()` hors production.
 - **Phase 7** — `DemoSeeder` réécrit (1 an, ordre chronologique, réapprovisionnement mensuel, crédits anciens et récents) ; l’historique ne se génère que sur une base sans prestation.
 
+- **Phase 8** — Les sauvegardes contiennent `storage/app/private` (et non `storage/app/public` comme prévu) : c’est là que sont les fichiers joints. Dossier de copie réglé dans l’écran (le garagiste n’ouvre pas `.env`), vérifié en écriture.
+- **Phase 8** — Planification `backup:run --if-missing` toutes les heures plutôt qu’à heure fixe : le PC du garage est souvent éteint la nuit.
+- **Phase 8** — Licence : clé courte (HMAC, 20 caractères) plutôt qu’une signature asymétrique (100+ caractères) : dictable. Code livré en clair = protection contre la copie simple seulement. Clé dans un fichier, hors base.
+- **Phase 8** — Compte initial (seeder) et comptes réinitialisés : mot de passe provisoire à changer à la connexion. Compte désactivé déconnecté immédiatement. Le gérant ne peut ni se désactiver ni changer son propre rôle ; le dernier gérant actif est protégé.
+- **Phase 8** — Défaut trouvé au navigateur : depuis le serveur web, `mariadb-dump` échouait (Windows, erreur 10106, `SystemRoot` absent de l’environnement) → `App\Support\ProcessEnv` transmis à `mariadb-dump`, `mariadb` et PowerShell.
+- **Phase 8** — Tests : dossier `tests/Integration` (sans transaction, `DatabaseTruncation`) pour la vraie sauvegarde/restauration ; SSR Inertia coupé dans les tests (`INERTIA_SSR_ENABLED=false`), sinon chaque page attendait 2 s le serveur Vite.
+
 ## Points ouverts
+
+- Licence : si PowerShell ne lit pas le numéro du disque, l’identifiant ne repose que sur le nom du PC (il n’est alors pas mis en cache et sera relu). À surveiller à l’installation (phase 9).
 
 - Mesure de rapidité sur 10 ans de données (objectif < 1 s) non faite : à mesurer sur une copie de base volumineuse avant la recette (phase 15).
 
 - Accès de l’employé à la caisse et au bénéfice : à confirmer avec le client avant la phase 11 (le CDC le réserve au gérant).
-- Un utilisateur désactivé pendant sa session reste connecté jusqu'à expiration (8 h) : à traiter avec la gestion des utilisateurs (phase 8).
-- Changement forcé du mot de passe gérant par défaut à la première connexion : phase 8.
 - `public/favicon.ico` et `apple-touch-icon.png` sont encore ceux de Laravel (le `favicon.svg` est remplacé).
 
 - Annulation de facture : la prestation repasse « En cours » et les pièces sont réintégrées (à confirmer avec le client).

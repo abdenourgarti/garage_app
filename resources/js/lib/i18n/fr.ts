@@ -48,6 +48,8 @@ export const fr = {
         description:
             "Les informations du garage et les listes proposées dans l'application.",
         garage: 'Garage',
+        users: 'Utilisateurs',
+        backups: 'Sauvegardes',
         references: 'Référentiels',
         referenceList: 'Liste',
         add: 'Ajouter',
@@ -528,6 +530,75 @@ export const fr = {
         logbookFilter: 'Filtrer par type de travail',
         logbookAll: (count: number) => `Tout (${count})`,
         newForVehicle: 'Nouvelle prestation',
+    },
+
+    users: {
+        description:
+            'Un compte par personne. Le gérant gère les comptes, les sauvegardes et la caisse.',
+        add: 'Ajouter',
+        create: 'Nouveau compte',
+        edit: 'Modifier le compte',
+        name: 'Nom',
+        username: 'Nom d’utilisateur',
+        usernameHint: 'Sans espace ni accent : il sert à se connecter.',
+        role: 'Rôle',
+        status: 'État',
+        actions: 'Actions',
+        password: 'Mot de passe provisoire',
+        passwordHint:
+            'Donnez-le à la personne : elle choisira le sien à la première connexion.',
+        resetPassword: 'Mot de passe',
+        resetTitle: (name: string) => `Nouveau mot de passe pour ${name}`,
+        resetSave: 'Réinitialiser',
+        me: 'vous',
+        mustChange: 'Mot de passe provisoire',
+        emptyTitle: 'Aucun compte',
+    },
+
+    backups: {
+        description:
+            'Une sauvegarde est faite automatiquement chaque jour. Gardez une copie sur un autre disque ou une clé USB.',
+        now: 'Sauvegarder maintenant',
+        last: 'Dernière sauvegarde',
+        none: 'Aucune sauvegarde pour l’instant.',
+        old: 'Plus d’un jour : faites une sauvegarde maintenant.',
+        list: 'Sauvegardes disponibles',
+        keep: (days: number) => `Elles sont gardées ${days} jours.`,
+        folder: (path: string) => `Dossier : ${path}`,
+        size: 'Taille',
+        date: 'Date',
+        download: 'Télécharger',
+        restore: 'Restaurer…',
+        safety: 'Avant restauration',
+        secondary: 'Dossier de copie (disque D:, clé USB)',
+        secondaryHint:
+            'Exemple : D:\\GarageApp-sauvegardes. Laissez vide pour ne pas faire de copie.',
+        secondaryOk: 'Copie active.',
+        secondarySave: 'Enregistrer',
+        restoreTitle: (date: string) => `Restaurer la sauvegarde du ${date} ?`,
+        restoreText:
+            'Toutes les données saisies depuis cette date seront remplacées : prestations, factures, stock, clients. Une sauvegarde de sécurité est faite juste avant.',
+        restoreContinue: 'Continuer',
+        confirmTitle: 'Dernière confirmation',
+        confirmText: (word: string) =>
+            `Tapez ${word} pour remplacer les données actuelles. Tout le monde devra se reconnecter.`,
+        confirmLabel: 'Confirmation',
+        confirmButton: 'Restaurer maintenant',
+        restoring: 'Restauration en cours… ne fermez pas la fenêtre.',
+    },
+
+    license: {
+        title: 'Activer GarageApp',
+        description:
+            'Envoyez cet identifiant à votre fournisseur : il vous renverra une clé pour ce PC.',
+        machine: 'Identifiant de ce PC',
+        copy: 'Copier',
+        copied: 'Copié',
+        key: 'Clé de licence',
+        keyPlaceholder: 'XXXXX-XXXXX-XXXXX-XXXXX',
+        activate: 'Activer',
+        invalidStored:
+            'La clé enregistrée ne correspond pas à ce PC (PC changé ou réinstallé). Demandez une nouvelle clé.',
     },
 
     search: {

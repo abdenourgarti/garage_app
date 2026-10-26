@@ -95,8 +95,8 @@ et le menu React masque les entrées non autorisées (prop partagée `auth.can`)
 | `StockService` | Écrit un `StockMovement` et met à jour `articles.stock_qty` (toujours ensemble) |
 | `CashService` | Calcule entrées, dépenses, bénéfice et détail par catégorie pour une période |
 | `ReminderService` | Prochaine vidange et kilométrage estimé (voir §8) |
-| `BackupService` | `mysqldump` + zip vers le dossier configuré, rotation 30 jours, restauration |
-| `LicenseService` | Vérifie la clé liée à l'identifiant machine (middleware) |
+| `BackupService` | `mariadb-dump` + zip (base + `storage/app/private`) vers le dossier configuré, copie secondaire, rotation 30 jours, restauration (sauvegarde de sécurité avant) |
+| `LicenseService` | Identifiant machine, clé de 20 caractères (HMAC), activation hors ligne ; middleware `EnsureLicensed` |
 
 ## 6. Actions métier (cœur du système)
 
@@ -161,7 +161,9 @@ et le menu React masque les entrées non autorisées (prop partagée `auth.can`)
 
 - Auth Fortify du starter kit, connexion par **nom d'utilisateur** (pas d'e-mail obligatoire, pas d'inscription publique), throttling de connexion.
 - Désactiver : inscription, vérification e-mail, reset par e-mail (pas d'internet) → réinitialisation du mot de passe par le gérant.
-- Session : expiration après 8 h d'inactivité (paramétrable).
+- Session : expiration après 8 h d'inactivité (`SESSION_LIFETIME=480`, paramétrable dans `.env`).
+- Middleware `EnsureAccountIsUsable` : compte désactivé = déconnecté à la page suivante ; mot de passe provisoire (compte initial,
+  réinitialisation par le gérant) = seule la page « Mot de passe » est accessible jusqu'au changement.
 - CSRF, hash bcrypt/argon, `APP_DEBUG=false` en production, en-têtes de sécurité de base.
 
 ## 12. Performance

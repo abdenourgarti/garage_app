@@ -1,14 +1,17 @@
 <?php
 
 use App\Enums\ReferenceType;
+use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\Admin\GarageSettingsController;
 use App\Http\Controllers\Admin\ReferenceController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Clients\ClientController;
 use App\Http\Controllers\Clients\LookupController;
 use App\Http\Controllers\Clients\VehicleController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\Invoices\InvoiceController;
 use App\Http\Controllers\Invoices\PaymentController;
+use App\Http\Controllers\LicenseController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ServiceOrders\ServiceOrderController;
 use App\Http\Controllers\Stock\ArticleController;
@@ -20,6 +23,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard')->name('home');
+
+// Activation de la licence (avant toute connexion).
+Route::get('license', [LicenseController::class, 'show'])->name('license.show');
+Route::post('license', [LicenseController::class, 'activate'])->middleware('throttle:10,1')->name('license.activate');
 
 Route::middleware('auth')->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
@@ -123,6 +130,18 @@ Route::middleware('auth')->group(function () {
         Route::middleware('can:manage-admin')->group(function () {
             Route::get('garage', [GarageSettingsController::class, 'edit'])->name('garage.edit');
             Route::put('garage', [GarageSettingsController::class, 'update'])->name('garage.update');
+
+            Route::get('users', [UserController::class, 'index'])->name('users.index');
+            Route::post('users', [UserController::class, 'store'])->name('users.store');
+            Route::put('users/{user}', [UserController::class, 'update'])->name('users.update');
+            Route::patch('users/{user}/toggle', [UserController::class, 'toggle'])->name('users.toggle');
+            Route::put('users/{user}/password', [UserController::class, 'resetPassword'])->name('users.password');
+
+            Route::get('backups', [BackupController::class, 'index'])->name('backups.index');
+            Route::post('backups', [BackupController::class, 'store'])->name('backups.store');
+            Route::put('backups/settings', [BackupController::class, 'updateSettings'])->name('backups.settings');
+            Route::get('backups/{name}', [BackupController::class, 'download'])->name('backups.download');
+            Route::post('backups/{name}/restore', [BackupController::class, 'restore'])->name('backups.restore');
         });
 
         Route::middleware('can:manage-references')->prefix('references')->name('references.')->group(function () {

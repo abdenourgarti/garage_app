@@ -60,9 +60,16 @@ Tâches planifiées : Planificateur de tâches Windows → `php artisan schedule
 
 ## 6. Sauvegardes
 
-- `mysqldump --single-transaction` + zip (base + `storage/app/public`), nommé `garage-AAAA-MM-JJ-HHmm.zip`.
-- Quotidienne via `schedule:run`, plus bouton « Sauvegarder maintenant » ; rotation 30 jours ; copie vers le dossier secondaire.
-- Restauration guidée depuis l'application (gérant) et script `tools\restore.bat` en secours.
+- `mariadb-dump --single-transaction` + zip : `database.sql` + `files/` (= `storage/app/private` : logo, factures fournisseurs,
+  preuves de paiement), nommé `garage-AAAA-MM-JJ-HHmm.zip`. Identifiants passés par un fichier temporaire, jamais en ligne de commande.
+- `.env` : `BACKUP_DUMP_BINARY` et `BACKUP_MYSQL_BINARY` (ex. `C:\GarageApp\mariadb\bin\mariadb-dump.exe`), `BACKUP_PATH`
+  (défaut `storage/app/backups`), `BACKUP_KEEP_DAYS=30`. Le dossier de copie (D:, clé USB) se règle dans Paramètres > Sauvegardes.
+- Planificateur de tâches Windows → `php artisan schedule:run` chaque minute ; `backup:run --if-missing` toutes les heures
+  (sauvegarde dès que la dernière a plus de 24 h : le PC est souvent éteint la nuit). Bouton « Sauvegarder maintenant » ; rotation 30 jours dans les deux dossiers.
+- Restauration guidée depuis l'application (gérant, deux confirmations dont le mot RESTAURER, sauvegarde de sécurité juste avant)
+  et script `tools\restore.bat` en secours.
+- Les programmes lancés depuis Apache reçoivent `SystemRoot` explicitement (`App\Support\ProcessEnv`) : sans elle, le réseau
+  de Windows ne démarre pas dans le sous-processus (erreur 10106).
 
 ## 7. Installateur (Inno Setup)
 
@@ -79,3 +86,9 @@ Désinstallateur : arrête et supprime les services, **conserve** `backups\`.
 
 Clé liée à un identifiant machine (hash du numéro de série disque + nom machine), vérifiée par un middleware ;
 écran d'activation hors-ligne (le développeur génère la clé à partir de l'identifiant affiché).
+
+- Identifiant `GA-XXXX-XXXX-XXXX` ; clé de 20 caractères `XXXXX-XXXXX-XXXXX-XXXXX` (sans 0/O ni 1/I), facile à dicter.
+- Clé stockée dans `storage/app/license.key` (hors base : une restauration ne la perd pas, une copie de la base ne l'active pas).
+- `LICENSE_ENABLED` : actif par défaut en production, `false` en développement.
+- Développeur : `php artisan license:generate GA-XXXX-XXXX-XXXX`. **Ne pas livrer** `app/Console/Commands/Dev` (exclu par l'installateur).
+- Limite assumée : le code PHP est livré en clair ; la licence empêche la copie simple vers un autre PC, pas un contournement technique.

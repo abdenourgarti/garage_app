@@ -118,6 +118,8 @@ class ReferenceDataSeeder extends Seeder
                 'name' => config('garage.admin.name'),
                 'password' => config('garage.admin.password'),
                 'role' => UserRole::Gerant,
+                // Mot de passe connu de tous (.env) : à remplacer dès la première connexion.
+                'must_change_password' => true,
             ],
         );
     }

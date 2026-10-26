@@ -16,6 +16,7 @@ import type { ReactNode } from 'react';
 import { useRef } from 'react';
 import { PageHeader } from '@/components/app/page-header';
 import { StatCard } from '@/components/app/stat-card';
+import { StatusBadge } from '@/components/app/status-badge';
 import { MonthsChart } from '@/components/dashboard/months-chart';
 import type { MonthTotals } from '@/components/dashboard/months-chart';
 import { RankingsPanel } from '@/components/dashboard/rankings';
@@ -30,8 +31,10 @@ import {
 import { fr } from '@/lib/i18n/fr';
 import { cn } from '@/lib/utils';
 import { credits as creditsIndex } from '@/routes/invoices';
+import { index as appointmentsIndex } from '@/routes/appointments';
 import { show as showOrder } from '@/routes/service-orders';
 import { index as stockIndex } from '@/routes/stock';
+import type { Appointment } from '@/types/appointments';
 
 gsap.registerPlugin(useGSAP);
 
@@ -39,6 +42,7 @@ type Totals = { incomes: string; expenses: string; profit: string };
 
 type Props = {
     ordersToday: number;
+    appointmentsToday: Appointment[];
     inProgress: {
         id: number;
         number: string;
@@ -88,6 +92,7 @@ function Panel({
 
 export default function Dashboard({
     ordersToday,
+    appointmentsToday,
     inProgress,
     lowStock,
     rankings,
@@ -167,6 +172,52 @@ export default function Dashboard({
 
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                     <Panel
+                        title={`${t.appointments} (${appointmentsToday.length})`}
+                        className="xl:order-2"
+                        action={
+                            <Link
+                                href={appointmentsIndex()}
+                                className="inline-flex min-h-11 items-center text-sm font-medium text-primary underline-offset-4 hover:underline"
+                            >
+                                {t.seeAppointments}
+                            </Link>
+                        }
+                    >
+                        {appointmentsToday.length === 0 ? (
+                            <p className="text-sm text-muted-foreground">
+                                {t.appointmentsEmpty}
+                            </p>
+                        ) : (
+                            <ul className="max-h-96 space-y-3 overflow-y-auto">
+                                {appointmentsToday.map((appointment) => (
+                                    <li
+                                        key={appointment.id}
+                                        className="flex items-start gap-3"
+                                    >
+                                        <span className="w-12 shrink-0 font-semibold tabular-nums">
+                                            {appointment.time}
+                                        </span>
+                                        <span className="min-w-0 flex-1">
+                                            <span className="block truncate font-medium">
+                                                {appointment.client.label}
+                                            </span>
+                                            <span className="block truncate text-sm text-muted-foreground">
+                                                {appointment.vehicle
+                                                    ? `${appointment.vehicle.label} · ${appointment.vehicle.description}`
+                                                    : fr.appointments.noVehicle}
+                                            </span>
+                                        </span>
+                                        <StatusBadge
+                                            type="appointment"
+                                            status={appointment.status}
+                                        />
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </Panel>
+
+                    <Panel
                         title={`${t.inProgress} (${inProgress.length})`}
                         className="xl:order-3"
                     >
@@ -209,7 +260,7 @@ export default function Dashboard({
                         )}
                     </Panel>
 
-                    <Panel title={t.alerts} className="xl:order-2">
+                    <Panel title={t.alerts} className="xl:order-4">
                         {!alerts ? (
                             <p className="flex items-center gap-2 text-sm text-muted-foreground">
                                 <CircleCheck
@@ -283,6 +334,10 @@ export default function Dashboard({
                         )}
                     </Panel>
 
+                    <Panel title={t.rankings} className="xl:order-5">
+                        <RankingsPanel rankings={rankings} />
+                    </Panel>
+
                     {money && (
                         <Panel
                             title={t.months}
@@ -294,13 +349,6 @@ export default function Dashboard({
                             <MonthsChart months={money.months} />
                         </Panel>
                     )}
-
-                    <Panel
-                        title={t.rankings}
-                        className={cn('xl:order-4', money && 'md:col-span-2')}
-                    >
-                        <RankingsPanel rankings={rankings} />
-                    </Panel>
                 </div>
             </div>
         </>

@@ -1,8 +1,10 @@
 <?php
 
+use App\Enums\AppointmentStatus;
 use App\Enums\InvoiceStatus;
 use App\Enums\PurchaseStatus;
 use App\Enums\ServiceOrderStatus;
+use App\Models\Appointment;
 use App\Models\Article;
 use App\Models\Client;
 use App\Models\Expense;
@@ -38,6 +40,13 @@ it('fills a coherent year of demo data, only once', function () {
     // Tableau de bord : quelque chose à surveiller.
     expect(Article::active()->lowStock()->exists())->toBeTrue()
         ->and(ServiceOrder::where('status', ServiceOrderStatus::InProgress)->whereDate('date', today())->count())->toBe(2);
+
+    // Rendez-vous : 3 prévus aujourd'hui, 12 à venir, les effectués liés à leur prestation.
+    expect(Appointment::where('status', AppointmentStatus::Planned)->whereDate('scheduled_at', today())->count())->toBe(3)
+        ->and(Appointment::where('status', AppointmentStatus::Planned)->whereDate('scheduled_at', '>', today())->count())->toBe(12)
+        ->and(Appointment::where('status', AppointmentStatus::Done)->whereNull('service_order_id')->count())->toBe(0)
+        ->and(Appointment::where('status', AppointmentStatus::Done)->whereDate('scheduled_at', today())->count())->toBe(1)
+        ->and(Appointment::where('status', AppointmentStatus::Cancelled)->count())->toBe(4);
 
     // Une facture par prestation terminée + une annulée, des crédits, jamais plus payé que le total.
     expect(Invoice::valid()->count())->toBe(198)

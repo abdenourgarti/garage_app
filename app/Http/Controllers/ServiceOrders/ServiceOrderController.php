@@ -4,12 +4,14 @@ namespace App\Http\Controllers\ServiceOrders;
 
 use App\Actions\ServiceOrders\CompleteServiceOrder;
 use App\Actions\ServiceOrders\SaveServiceOrder;
+use App\Enums\AppointmentStatus;
 use App\Enums\ImmobilizationUnit;
 use App\Enums\PartOrigin;
 use App\Enums\ServiceOrderStatus;
 use App\Http\Controllers\Clients\LookupController;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ServiceOrders\ServiceOrderRequest;
+use App\Models\Appointment;
 use App\Models\Employee;
 use App\Models\Invoice;
 use App\Models\ServiceOrder;
@@ -252,7 +254,11 @@ class ServiceOrderController extends Controller
             throw ValidationException::withMessages(['status' => 'Cette prestation a déjà été facturée : corrigez-la puis terminez-la à nouveau.']);
         }
 
-        $order->delete();
+        // Le rendez-vous qui l'avait commencée redevient Prévu.
+        DB::transaction(function () use ($order) {
+            Appointment::where('service_order_id', $order->id)->update(['status' => AppointmentStatus::Planned, 'service_order_id' => null]);
+            $order->delete();
+        });
 
         Inertia::flash('toast', ['type' => 'success', 'message' => "Prestation {$order->number} supprimée."]);
 

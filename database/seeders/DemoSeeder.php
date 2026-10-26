@@ -14,11 +14,13 @@ use App\Actions\ServiceOrders\SaveServiceOrder;
 use App\Actions\Stock\CreateArticle;
 use App\Actions\Stock\SaveOilProduct;
 use App\Actions\Vehicles\CreateVehicle;
+use App\Enums\AppointmentStatus;
 use App\Enums\OilUsage;
 use App\Enums\PurchaseStatus;
 use App\Enums\SalaryType;
 use App\Enums\StockUnit;
 use App\Enums\UserRole;
+use App\Models\Appointment;
 use App\Models\Article;
 use App\Models\ArticleCategory;
 use App\Models\Brand;
@@ -92,6 +94,7 @@ class DemoSeeder extends Seeder
             $this->history();
             $this->payroll();
             $this->cash();
+            $this->appointments();
         } finally {
             Carbon::setTestNow();
             mt_srand();
@@ -220,6 +223,68 @@ class DemoSeeder extends Seeder
     /**
      * Dépenses courantes saisies à la main (loyer, électricité, eau, outillage, divers) et quelques autres entrées, sur 12 mois.
      */
+    /**
+     * Rendez-vous : effectués (liés aux prestations des 2 derniers mois et à une prestation en cours du jour),
+     * quelques annulés, 3 prévus aujourd'hui (dont un sans véhicule) et une douzaine sur les 2 semaines à venir.
+     */
+    private function appointments(): void
+    {
+        if (Appointment::exists()) {
+            return;
+        }
+
+        $vehicles = Vehicle::orderBy('id')->get(['id', 'client_id']);
+        $types = ServiceType::active()->orderBy('id')->pluck('id')->all();
+
+        if ($vehicles->isEmpty() || $types === []) {
+            return;
+        }
+
+        $notes = ['Apporte son huile', 'Bruit au freinage', 'Voyant moteur allumé', 'Rappeler la veille', null, null, null, null];
+        $randomTypes = fn () => array_values(array_unique([$types[mt_rand(0, count($types) - 1)], $types[mt_rand(0, count($types) - 1)]]));
+        $randomTime = fn (CarbonInterface $day) => $day->copy()->setTime(mt_rand(8, 15), [0, 30][mt_rand(0, 1)]);
+        $book = function (int $clientId, ?int $vehicleId, CarbonInterface $at, AppointmentStatus $status, array $typeIds, ?string $note, ?int $orderId = null): void {
+            $appointment = new Appointment(['client_id' => $clientId, 'vehicle_id' => $vehicleId, 'scheduled_at' => $at, 'notes' => $note, 'user_id' => Auth::id()]);
+            $appointment->forceFill(['status' => $status, 'service_order_id' => $orderId])->save();
+            $appointment->serviceTypes()->sync($typeIds);
+        };
+
+        $orders = ServiceOrder::with('lines:id,service_order_id,service_type_id')->where('date', '>=', today()->subDays(60))->orderBy('date')->orderBy('id')->get();
+
+        foreach ($orders as $index => $order) {
+            $today = $order->date->isToday();
+
+            // Un RDV sur deux devient une prestation ; aujourd'hui, seulement la première prestation en cours.
+            if ($today ? $index !== $orders->search(fn ($o) => $o->date->isToday()) : $index % 2 === 1) {
+                continue;
+            }
+
+            $book($order->client_id, $order->vehicle_id, $order->date->copy()->setTime(8, 30), AppointmentStatus::Done, $order->lines->pluck('service_type_id')->unique()->values()->all(), null, $order->id);
+        }
+
+        foreach ([3, 9, 17, 26] as $daysAgo) {
+            $vehicle = $vehicles[mt_rand(0, $vehicles->count() - 1)];
+            $book($vehicle->client_id, $vehicle->id, $randomTime(today()->subDays($daysAgo)), AppointmentStatus::Cancelled, $randomTypes(), null);
+        }
+
+        foreach (['10:00', '11:30', '14:00'] as $index => $time) {
+            $vehicle = $vehicles[mt_rand(0, $vehicles->count() - 1)];
+            $withVehicle = $index !== 1;
+            $book($vehicle->client_id, $withVehicle ? $vehicle->id : null, today()->setTimeFromTimeString($time), AppointmentStatus::Planned, $randomTypes(), $withVehicle ? $notes[mt_rand(0, count($notes) - 1)] : 'Nouvelle voiture : véhicule à préciser');
+        }
+
+        for ($day = today()->addDay(), $booked = 0; $booked < 12; $day = $day->addDay()) {
+            // Le garage est fermé le vendredi.
+            if ($day->isFriday() || mt_rand(0, 2) === 0) {
+                continue;
+            }
+
+            $vehicle = $vehicles[mt_rand(0, $vehicles->count() - 1)];
+            $book($vehicle->client_id, $vehicle->id, $randomTime($day), AppointmentStatus::Planned, $randomTypes(), $notes[mt_rand(0, count($notes) - 1)]);
+            $booked++;
+        }
+    }
+
     private function cash(): void
     {
         if (OtherIncome::exists()) {

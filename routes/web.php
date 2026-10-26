@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\Admin\GarageSettingsController;
 use App\Http\Controllers\Admin\ReferenceController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\CashController;
 use App\Http\Controllers\Clients\ClientController;
 use App\Http\Controllers\Clients\LookupController;
@@ -35,8 +36,11 @@ Route::middleware('auth')->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
     Route::get('search', SearchController::class)->name('search');
 
-    // shortcut: pages « Bientôt disponible » le temps que chaque module soit livré (phases 3 à 14).
-    Route::inertia('appointments', 'coming-soon', ['title' => 'Rendez-vous'])->name('appointments.index');
+    Route::get('appointments', [AppointmentController::class, 'index'])->name('appointments.index');
+    Route::post('appointments', [AppointmentController::class, 'store'])->name('appointments.store');
+    Route::put('appointments/{appointment}', [AppointmentController::class, 'update'])->name('appointments.update');
+    Route::post('appointments/{appointment}/start', [AppointmentController::class, 'start'])->name('appointments.start');
+    Route::post('appointments/{appointment}/cancel', [AppointmentController::class, 'cancel'])->name('appointments.cancel');
 
     // Caisse (gérant).
     Route::middleware('can:manage-cash')->group(function () {

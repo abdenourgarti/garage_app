@@ -115,7 +115,8 @@ Une avance = une `expense` de catégorie système `advances` avec `employee_id`.
 
 | Table | Colonnes |
 | --- | --- |
-| `appointments` | `client_id` FK, `vehicle_id` FK null, `scheduled_at` datetime, `planned_services` text null, `notes` null, `status` enum(`prevu`,`effectue`,`annule`), `service_order_id` FK null, `user_id` FK |
+| `appointments` | `client_id` FK, `vehicle_id` FK null, `scheduled_at` datetime (index), `notes` null, `status` enum(`prevu`,`effectue`,`annule`), `service_order_id` FK null (`nullOnDelete`), `user_id` FK |
+| `appointment_service_type` | `appointment_id` FK (`cascadeOnDelete`), `service_type_id` FK (`restrictOnDelete`) ; clé primaire sur les deux — prestations prévues (phase 13 : remplace `planned_services` texte, pour pré-remplir les lignes au démarrage) |
 
 ## 11. Enums PHP (app/Enums)
 

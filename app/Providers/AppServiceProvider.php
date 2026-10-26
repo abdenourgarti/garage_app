@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Appointment;
 use App\Models\Article;
 use App\Models\Expense;
 use App\Models\Invoice;
@@ -50,7 +51,7 @@ class AppServiceProvider extends ServiceProvider
         ]);
 
         // Tableau de bord : chiffres recalculés dès qu'un mouvement change (après le commit, sinon un autre écran remettrait l'ancien chiffre en cache).
-        foreach ([Payment::class, Expense::class, OtherIncome::class, Invoice::class, ServiceOrder::class, StockMovement::class, Article::class] as $model) {
+        foreach ([Appointment::class, Payment::class, Expense::class, OtherIncome::class, Invoice::class, ServiceOrder::class, StockMovement::class, Article::class] as $model) {
             $forget = fn () => DB::afterCommit(fn () => DashboardService::forget());
             $model::saved($forget);
             $model::deleted($forget);

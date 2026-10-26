@@ -7,6 +7,7 @@ use App\Enums\OilFormat;
 use App\Enums\PartOrigin;
 use App\Enums\ServiceOrderStatus;
 use App\Enums\StockUnit;
+use App\Http\Controllers\AppointmentController;
 use App\Models\Article;
 use App\Support\Decimal;
 use Carbon\CarbonImmutable;
@@ -59,6 +60,7 @@ class DashboardService
     {
         return Cache::remember(self::key('activity'), self::TTL, fn () => [
             'ordersToday' => DB::table('service_orders')->whereDate('date', CarbonImmutable::today())->count(),
+            'appointmentsToday' => AppointmentController::list(CarbonImmutable::today(), CarbonImmutable::today()),
             'inProgress' => $this->inProgress(),
             'lowStock' => $this->lowStock(),
             'rankings' => [
